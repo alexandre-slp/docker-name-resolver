@@ -1,0 +1,1 @@
+# docker-name-resolver
