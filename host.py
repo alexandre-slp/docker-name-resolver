@@ -23,6 +23,13 @@ def get_hosts_paths(system: str, release: str) -> list:
         return ['C:/Windows/System32/drivers/etc/hosts']
 
 
+def initial_update_hosts(network_info: dict, hosts_path: list):
+    for container_info in network_info.get('Containers').values():
+        container_ip = container_info.get('IPv4Address').split('/')[0]
+        container_name = container_info.get('Name')
+        insert_on_hosts(container_ip, container_name, hosts_path)
+
+
 def insert_on_hosts(ip: str, name: str, paths: list):
     hosts_entry = f'{ip}\t{name} #DNR\n'
     for path in paths:
@@ -30,7 +37,7 @@ def insert_on_hosts(ip: str, name: str, paths: list):
             content = original_hosts.read()
 
         if name not in content:
-            if content[-1] in string.ascii_letters:
+            if content and content[-1] in string.ascii_letters:
                 content += '\n'
 
             parent = pathlib.Path(path).parent

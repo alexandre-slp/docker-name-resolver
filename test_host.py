@@ -1,11 +1,11 @@
 import os
 
-from host import get_hosts_paths, insert_on_hosts, remove_from_hosts
+from host import initial_update_hosts, get_hosts_paths, insert_on_hosts, remove_from_hosts
 
 
 class TestHost:
     paths = ['./test1', './test2']
-    fake_initial_content_1 = 'abc'
+    fake_initial_content_1 = ''
     fake_initial_content_2 = '''
 127.0.0.1	localhost
 127.0.1.1	HUNB707
@@ -87,9 +87,9 @@ ff02::2 ip6-allrouters
                 contents.append(file.read())
 
         self._delete_fake_file()
-        hosts_entry = f'\n{fake_ip}\t{fake_name} #DNR\n'
+        hosts_entry = f'{fake_ip}\t{fake_name} #DNR\n'
         for c in contents:
-            assert c == self.fake_initial_content_1 + hosts_entry
+            assert c == hosts_entry
 
     def test_insert_on_hosts_2(self):
         contents = []
@@ -105,6 +105,25 @@ ff02::2 ip6-allrouters
         hosts_entry = f'{fake_ip}\t{fake_name} #DNR\n'
         for c in contents:
             assert c == self.fake_initial_content_2 + hosts_entry
+
+    def test_initial_update_hosts(self):
+        contents = []
+        expected_content = '123.123.123.123\tContainer 1 #DNR\n321.321.321.321\tContainer 2 #DNR\n'
+        fake_network = {
+            'Containers': {
+                '1': {'Name': 'Container 1', 'IPv4Address': '123.123.123.123/16'},
+                '2': {'Name': 'Container 2', 'IPv4Address': '321.321.321.321/16'},
+            }
+        }
+        self._create_fake_file(self.fake_initial_content_1)
+        initial_update_hosts(fake_network, self.paths)
+        for p in self.paths:
+            with open(p) as file:
+                contents.append(file.read())
+
+        self._delete_fake_file()
+        for c in contents:
+            assert c == expected_content
 
     def test_remove_from_hosts_3(self):
         contents = []
