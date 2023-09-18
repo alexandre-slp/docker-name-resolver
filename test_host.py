@@ -1,6 +1,7 @@
 import os
+import re
 
-from host import initial_update_hosts, get_hosts_paths, insert_on_hosts, remove_from_hosts
+from host import initial_update_hosts, build_hosts_pattern, get_hosts_paths, insert_on_hosts, remove_from_hosts
 
 
 class TestHost:
@@ -76,6 +77,18 @@ ff02::2 ip6-allrouters
         expected_paths = ['/etc/hosts', 'C:/Windows/System32/drivers/etc/hosts']
         assert paths == expected_paths
 
+    @staticmethod
+    def test_build_hosts_pattern():
+        expected_result = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*fake_name[ \t]*#DNR.*$')
+        pattern = build_hosts_pattern('fake_name')
+        assert pattern == expected_result
+
+    @staticmethod
+    def test_build_hosts_pattern_match():
+        fake_string = '123.123.123.123  fake_name   #DNR'
+        pattern = build_hosts_pattern('fake_name')
+        assert re.match(pattern, fake_string) is not None
+
     def test_insert_on_hosts_1(self):
         contents = []
         fake_ip = '123.123.123.123'
@@ -106,7 +119,7 @@ ff02::2 ip6-allrouters
         for c in contents:
             assert c == self.fake_initial_content_2 + hosts_entry
 
-    def test_initial_update_hosts(self):
+    def test_initial_update_hosts_insert(self):
         contents = []
         expected_content = '123.123.123.123\tContainer 1 #DNR\n321.321.321.321\tContainer 2 #DNR\n'
         fake_network = {
@@ -125,8 +138,33 @@ ff02::2 ip6-allrouters
         for c in contents:
             assert c == expected_content
 
+    def test_initial_update_hosts_remove(self):
+        contents = []
+        expected_content = '''
+127.0.0.1	localhost
+127.0.1.1	HUNB707
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+'''
+        fake_network = {'Containers': {}}
+        self._create_fake_file(self.fake_initial_content_4)
+        initial_update_hosts(fake_network, self.paths)
+        for p in self.paths:
+            with open(p) as file:
+                contents.append(file.read())
+
+        self._delete_fake_file()
+        for c in contents:
+            assert c == expected_content
+
     def test_remove_from_hosts_3(self):
         contents = []
+        pattern = build_hosts_pattern('fake_name')
         expected_result = '''
 127.0.0.1	localhost
 127.0.1.1	HUNB707
@@ -139,7 +177,7 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 '''
         self._create_fake_file(self.fake_initial_content_3)
-        remove_from_hosts('fake_name', self.paths)
+        remove_from_hosts(pattern, self.paths)
         for p in self.paths:
             with open(p) as file:
                 contents.append(file.read())
@@ -150,6 +188,7 @@ ff02::2 ip6-allrouters
 
     def test_remove_from_hosts_4(self):
         contents = []
+        pattern = build_hosts_pattern('fake_name2')
         expected_result = '''
 127.0.0.1	localhost
 127.0.1.1	HUNB707
@@ -163,7 +202,7 @@ ff02::2 ip6-allrouters
 123.123.123.123 fake_name #DNR
 '''
         self._create_fake_file(self.fake_initial_content_4)
-        remove_from_hosts('fake_name2', self.paths)
+        remove_from_hosts(pattern, self.paths)
         for p in self.paths:
             with open(p) as file:
                 contents.append(file.read())

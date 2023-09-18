@@ -4,7 +4,7 @@ import platform
 import docker
 
 from event import is_start, is_die, get_container_name, get_container_ip
-from host import initial_update_hosts, get_hosts_paths, insert_on_hosts, remove_from_hosts
+from host import initial_update_hosts, build_hosts_pattern, get_hosts_paths, insert_on_hosts, remove_from_hosts
 
 if __name__ == '__main__':
     client = docker.from_env()
@@ -23,4 +23,5 @@ if __name__ == '__main__':
 
         if is_die(event):
             container_name = get_container_name(event)
-            remove_from_hosts(container_name, hosts_path)
+            pattern = build_hosts_pattern(container_name)
+            remove_from_hosts(pattern, hosts_path)
