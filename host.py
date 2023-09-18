@@ -50,7 +50,7 @@ def insert_on_hosts(ip: str, name: str, paths: list):
 
 
 def remove_from_hosts(name: str, paths: list):
-    pattern = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} *' + name + r' *#DNR.*$')
+    pattern = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + r'[ \t]*#DNR.*$')
     for path in paths:
         with open(path) as hosts:
             lines = hosts.readlines()
