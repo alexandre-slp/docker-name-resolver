@@ -8,7 +8,7 @@
 ```
 It is a simple script to sync `hosts` file with container IPs listening to Docker events.
 
-Original content example:
+`hosts` original content example:
 ```
 127.0.0.1	localhost
 127.0.1.1	HOST
@@ -21,7 +21,7 @@ ff02::1 ip6-allnodes
 ff02::2	ip6-allrouters
 ```
 
-After starting the container `my_service`:
+After the start of `my_service` container:
 ```
 127.0.0.1	localhost
 127.0.1.1	HOST
@@ -37,10 +37,10 @@ ff02::2	ip6-allrouters
 
 Now it is possible to ping container name and host will be able to resolve it.
 
-When container stop the line is removed from `hosts`.
+When container stops the line is removed from `hosts`.
 
 ## Requirements
-- docker
+- Docker
 
 ## Make
 | target | explanation |
