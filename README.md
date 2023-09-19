@@ -6,7 +6,7 @@
  / /_/ / /|  / _, _/  
 /_____/_/ |_/_/ |_|   
 ```
-It's a simple way to resolve the container name to it's IP.
+It's a simple way to resolve the Docker container name to it's IP.
 
 `hosts` original content example:
 ```
