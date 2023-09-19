@@ -20,7 +20,7 @@ welcome:
 help: welcome
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep ^help -v | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-22s\033[0m %s\n", $$1, $$2}'
 
-build: welcome  ## Builds DNR image
+build: welcome  ## Build DNR image
 	@if [ -z '${HAS_IMAGE}' ]; \
 		then \
 			docker build \
@@ -76,12 +76,12 @@ test: welcome build ## Run tests
 			${APP_NAME} \
 			pytest
 
-rmi: ## Remove docker image
+rmi: ## Remove DNR image
 	@if [ '${HAS_IMAGE}' ]; \
 		then \
 			docker rmi ${APP_NAME} \
 		; \
 	fi
 
-stop: ## Stop container
+stop: ## Stop DNR
 	@docker stop ${APP_NAME}
