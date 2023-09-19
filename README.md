@@ -6,7 +6,7 @@
  / /_/ / /|  / _, _/  
 /_____/_/ |_/_/ |_|   
 ```
-It is a simple script to sync `hosts` file with container IPs listening to Docker events.
+It's a simple way to resolve the container name to it's IP.
 
 `hosts` original content example:
 ```
@@ -35,7 +35,7 @@ ff02::2	ip6-allrouters
 172.17.0.2	my_service #DNR
 ```
 
-Now it is possible to ping container name and host will be able to resolve it.
+Now it's possible to ping container name and host will be able to resolve it.
 
 When container stops the line is removed from `hosts`.
 
