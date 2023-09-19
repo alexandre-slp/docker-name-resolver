@@ -23,6 +23,20 @@ def get_hosts_paths(system: str, release: str) -> list:
         return ['C:/Windows/System32/drivers/etc/hosts']
 
 
+def build_hosts_pattern(name):
+    return re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + r'[ \t]*#DNR.*$')
+
+
+def initial_update_hosts(network_info: dict, paths: list):
+    pattern = re.compile(r'^.*#DNR.*$')
+    remove_from_hosts(pattern, paths)
+
+    for container_info in network_info.get('Containers').values():
+        container_ip = container_info.get('IPv4Address').split('/')[0]
+        container_name = container_info.get('Name')
+        insert_on_hosts(container_ip, container_name, paths)
+
+
 def insert_on_hosts(ip: str, name: str, paths: list):
     hosts_entry = f'{ip}\t{name} #DNR\n'
     for path in paths:
@@ -30,7 +44,7 @@ def insert_on_hosts(ip: str, name: str, paths: list):
             content = original_hosts.read()
 
         if name not in content:
-            if content[-1] in string.ascii_letters:
+            if content and content[-1] in string.ascii_letters:
                 content += '\n'
 
             parent = pathlib.Path(path).parent
@@ -42,14 +56,13 @@ def insert_on_hosts(ip: str, name: str, paths: list):
                 shutil.copy(parent.joinpath(new_hosts.name), path)
 
 
-def remove_from_hosts(name: str, paths: list):
-    pattern = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3} *' + name + r' *#DNR.*$')
+def remove_from_hosts(pattern: re.Pattern, paths: list):
     for path in paths:
         with open(path) as hosts:
             lines = hosts.readlines()
             new_lines = lines.copy()
 
-        for ln in new_lines:
+        for ln in lines:
             if re.match(pattern, ln):
                 new_lines.remove(ln)
 
