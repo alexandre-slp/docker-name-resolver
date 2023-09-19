@@ -1,5 +1,11 @@
 # Docker Name Resolver (DNR)
-
+```
+    ____  _   ______  
+   / __ \/ | / / __ \ 
+  / / / /  |/ / /_/ / 
+ / /_/ / /|  / _, _/  
+/_____/_/ |_/_/ |_|   
+```
 It is a simple script to sync `hosts` file with container IPs listening to Docker events.
 
 Original content example:
@@ -35,6 +41,17 @@ When container stop the line is removed from `hosts`.
 
 ## Requirements
 - docker
+
+## Make
+| target | explanation |
+|-------|-----------------|
+| build | Build DNR image |  
+| rmi | Remove DNR image |  
+| stop | Stop DNR |  
+| test | Run tests |  
+| unix | Run DNR on unix systems |  
+| windows | Run DNR on windows system |  
+| wsl | Run DNR on wsl system |  
 
 ## Spported Systems
 - Unix based (Ubuntu, Mac..)
