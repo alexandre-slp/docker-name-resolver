@@ -33,17 +33,19 @@ def insert_on_hosts(ip: str, name: str, paths: list):
         with open(path) as original_hosts:
             content = original_hosts.read()
 
-        if name not in content:
-            if content and content[-1] in string.ascii_letters:
-                content += '\n'
+        if name in content:
+            continue
 
-            parent = pathlib.Path(path).parent
-            with tempfile.NamedTemporaryFile(dir=parent) as new_hosts:
-                temp = f'{content}{hosts_entry}'
-                b = bytes(temp, 'utf-8')
-                new_hosts.write(b)
-                new_hosts.seek(0)
-                shutil.copy(parent.joinpath(new_hosts.name), path)
+        if content and content[-1] in string.ascii_letters:
+            content += '\n'
+
+        parent = pathlib.Path(path).parent
+        with tempfile.NamedTemporaryFile(dir=parent) as new_hosts:
+            temp = f'{content}{hosts_entry}'
+            b = bytes(temp, 'utf-8')
+            new_hosts.write(b)
+            new_hosts.seek(0)
+            shutil.copy(parent.joinpath(new_hosts.name), path)
 
 
 def remove_from_hosts(pattern: re.Pattern, paths: list):
