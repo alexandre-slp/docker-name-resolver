@@ -28,7 +28,7 @@ if __name__ == '__main__':
         container_name = container_info.get('Name')
         insert_on_hosts(container_ip, container_name, hosts_path)
         try:
-            client.api.connect_container_to_network(container_name, dnr_network_name)
+            client.api.connect_container_to_network(container_name, dnr_network_name, aliases=[f'{container_name}.dnr'])
         except APIError:
             pass
 
@@ -39,7 +39,7 @@ if __name__ == '__main__':
             container_name = get_container_name(event)
             insert_on_hosts(container_ip, container_name, hosts_path)
             try:
-                client.api.connect_container_to_network(container_name, dnr_network_name)
+                client.api.connect_container_to_network(container_name, dnr_network_name, aliases=[f'{container_name}.dnr'])
             except APIError:
                 pass
 
