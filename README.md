@@ -32,7 +32,7 @@ fe00::0 ip6-localnet
 ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2	ip6-allrouters
-172.17.0.2	my_service #DNR
+172.17.0.2	my_service.dnr
 ```
 
 Now it's possible to ping container name and host will be able to resolve it.
