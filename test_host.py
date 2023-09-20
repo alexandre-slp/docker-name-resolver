@@ -1,7 +1,7 @@
 import os
 import re
 
-from host import initial_update_hosts, build_hosts_pattern, get_hosts_paths, insert_on_hosts, remove_from_hosts
+from host import build_hosts_pattern, get_hosts_paths, insert_on_hosts, remove_from_hosts
 
 
 class TestHost:
@@ -119,49 +119,6 @@ ff02::2 ip6-allrouters
         expected_result = self.fake_initial_content_2 + hosts_entry
         for c in contents:
             assert c == expected_result
-
-    def test_initial_update_hosts_insert(self):
-        contents = []
-        expected_content = '123.123.123.123\tContainer 1.dnr\n321.321.321.321\tContainer 2.dnr\n'
-        fake_network = {
-            'Containers': {
-                '1': {'Name': 'Container 1', 'IPv4Address': '123.123.123.123/16'},
-                '2': {'Name': 'Container 2', 'IPv4Address': '321.321.321.321/16'},
-            }
-        }
-        self._create_fake_file(self.fake_initial_content_1)
-        initial_update_hosts(fake_network, self.paths)
-        for p in self.paths:
-            with open(p) as file:
-                contents.append(file.read())
-
-        self._delete_fake_file()
-        for c in contents:
-            assert c == expected_content
-
-    def test_initial_update_hosts_remove(self):
-        contents = []
-        expected_content = '''
-127.0.0.1	localhost
-127.0.1.1	HUNB707
-
-# The following lines are desirable for IPv6 capable hosts
-::1     ip6-localhost ip6-loopback
-fe00::0 ip6-localnet
-ff00::0 ip6-mcastprefix
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
-'''
-        fake_network = {'Containers': {}}
-        self._create_fake_file(self.fake_initial_content_4)
-        initial_update_hosts(fake_network, self.paths)
-        for p in self.paths:
-            with open(p) as file:
-                contents.append(file.read())
-
-        self._delete_fake_file()
-        for c in contents:
-            assert c == expected_content
 
     def test_remove_from_hosts_3(self):
         contents = []

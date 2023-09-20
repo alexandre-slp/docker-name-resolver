@@ -27,16 +27,6 @@ def build_hosts_pattern(name):
     return re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + r'\.dnr.*$')
 
 
-def initial_update_hosts(network_info: dict, paths: list):
-    pattern = re.compile(r'^.*\.dnr.*$')
-    remove_from_hosts(pattern, paths)
-
-    for container_info in network_info.get('Containers').values():
-        container_ip = container_info.get('IPv4Address').split('/')[0]
-        container_name = container_info.get('Name')
-        insert_on_hosts(container_ip, container_name, paths)
-
-
 def insert_on_hosts(ip: str, name: str, paths: list):
     hosts_entry = f'{ip}\t{name}.dnr\n'
     for path in paths:
