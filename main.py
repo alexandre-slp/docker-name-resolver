@@ -26,12 +26,11 @@ if __name__ == '__main__':
     for container_info in network_bridge.get('Containers').values():
         container_ip = container_info.get('IPv4Address').split('/')[0]
         container_name = container_info.get('Name')
+        insert_on_hosts(container_ip, container_name, hosts_path)
         try:
             client.api.connect_container_to_network(container_name, dnr_network_name)
         except APIError:
-            pass  # Container already attached to network
-
-        insert_on_hosts(container_ip, container_name, hosts_path)
+            pass
 
     for event in client.events(decode=True):
         if is_start(event):
