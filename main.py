@@ -38,6 +38,10 @@ if __name__ == '__main__':
             container_ip = get_container_ip(event, network_bridge)
             container_name = get_container_name(event)
             insert_on_hosts(container_ip, container_name, hosts_path)
+            try:
+                client.api.connect_container_to_network(container_name, dnr_network_name)
+            except APIError:
+                pass
 
         if is_die(event):
             container_name = get_container_name(event)
