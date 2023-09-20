@@ -120,6 +120,22 @@ ff02::2 ip6-allrouters
         for c in contents:
             assert c == expected_result
 
+    def test_insert_on_hosts_duplicated(self):
+        contents = []
+        fake_ip = '123.123.123.123'
+        fake_name = 'fake_name'
+        self._create_fake_file(self.fake_initial_content_3)
+        insert_on_hosts(fake_ip, fake_name, self.paths)
+        for p in self.paths:
+            with open(p) as file:
+                contents.append(file.read())
+
+        self._delete_fake_file()
+        hosts_entry = f'{fake_ip}\t{fake_name}.dnr\n'
+        expected_result = self.fake_initial_content_3
+        for c in contents:
+            assert c == expected_result
+
     def test_remove_from_hosts_3(self):
         contents = []
         pattern = build_hosts_pattern('fake_name')
