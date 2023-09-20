@@ -131,7 +131,6 @@ ff02::2 ip6-allrouters
                 contents.append(file.read())
 
         self._delete_fake_file()
-        hosts_entry = f'{fake_ip}\t{fake_name}.dnr\n'
         expected_result = self.fake_initial_content_3
         for c in contents:
             assert c == expected_result
