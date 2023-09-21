@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 pytest = "*"
 docker = "*"
+click = "*"
 
 [dev-packages]
 

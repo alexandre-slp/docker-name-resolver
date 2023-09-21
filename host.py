@@ -23,12 +23,16 @@ def get_hosts_paths(system: str, release: str) -> list:
         return ['C:/Windows/System32/drivers/etc/hosts']
 
 
-def build_hosts_pattern(name):
-    return re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + r'\.dnr.*$')
+def build_hosts_pattern(name: str, escaped_domain: str):
+    return re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + escaped_domain + r'.*$')
 
 
-def insert_on_hosts(ip: str, name: str, paths: list):
-    hosts_entry = f'{ip}\t{name}.dnr\n'
+def build_container_aliases(name: str, domain: str) -> list:
+    return [f'{name}{domain}']
+
+
+def insert_on_hosts(ip: str, name: str, domain: str, paths: list):
+    hosts_entry = f'{ip}\t{name}{domain}\n'
     for path in paths:
         with open(path) as original_hosts:
             content = original_hosts.read()
