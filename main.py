@@ -11,8 +11,8 @@ from host import build_hosts_pattern, build_container_aliases, get_hosts_paths, 
 
 
 @click.command()
-@click.option('-d', '--domain', default='.dnr', help='Domain name, default=.dnr')
-@click.option('-n', '--network',  default='dnr-network', help='Network name, default=dnr-network')
+@click.option('-d', '--domain_name', default='.dnr', help='Domain name, default=.dnr')
+@click.option('-n', '--dnr_network_name',  default='dnr-network', help='Network name, default=dnr-network')
 def main(
         domain_name: str,
         dnr_network_name: str,
