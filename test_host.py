@@ -29,9 +29,21 @@ fe00::0 ip6-localnet
 ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
-123.123.123.123 fake_name.dnr
+123.123.123.123 fake_name.xpto
 '''
     fake_initial_content_4 = '''
+127.0.0.1	localhost
+127.0.1.1	HUNB707
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+123.123.123.123\tfake_name.dnr
+'''
+    fake_initial_content_5 = '''
 127.0.0.1	localhost
 127.0.1.1	HUNB707
 
@@ -80,7 +92,7 @@ ff02::2 ip6-allrouters
 
     @staticmethod
     def test_build_hosts_pattern():
-        expected_result = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*fake_name\.dnr.*$')
+        expected_result = re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*fake_name\.dnr.*')
         pattern = build_hosts_pattern('fake_name', r'\.dnr')
         assert pattern == expected_result
 
@@ -101,8 +113,9 @@ ff02::2 ip6-allrouters
         fake_ip = '123.123.123.123'
         fake_name = 'fake_name'
         fake_domain = '.dnr'
+        fake_pattern = build_hosts_pattern(fake_name, re.escape(fake_domain))
         self._create_fake_file(self.fake_initial_content_1)
-        insert_on_hosts(fake_ip, fake_name, fake_domain, self.paths)
+        insert_on_hosts(fake_ip, fake_name, fake_domain, fake_pattern, self.paths)
         for p in self.paths:
             with open(p) as file:
                 contents.append(file.read())
@@ -117,8 +130,9 @@ ff02::2 ip6-allrouters
         fake_ip = '123.123.123.123'
         fake_name = 'fake_name'
         fake_domain = '.dnr'
+        fake_pattern = build_hosts_pattern(fake_name, re.escape(fake_domain))
         self._create_fake_file(self.fake_initial_content_2)
-        insert_on_hosts(fake_ip, fake_name, fake_domain, self.paths)
+        insert_on_hosts(fake_ip, fake_name, fake_domain, fake_pattern, self.paths)
         for p in self.paths:
             with open(p) as file:
                 contents.append(file.read())
@@ -129,19 +143,38 @@ ff02::2 ip6-allrouters
         for c in contents:
             assert c == expected_result
 
-    def test_insert_on_hosts_duplicated(self):
+    def test_insert_on_hosts_3(self):
         contents = []
         fake_ip = '123.123.123.123'
         fake_name = 'fake_name'
         fake_domain = '.dnr'
+        fake_pattern = build_hosts_pattern(fake_name, re.escape(fake_domain))
         self._create_fake_file(self.fake_initial_content_3)
-        insert_on_hosts(fake_ip, fake_name, fake_domain, self.paths)
+        insert_on_hosts(fake_ip, fake_name, fake_domain, fake_pattern, self.paths)
         for p in self.paths:
             with open(p) as file:
                 contents.append(file.read())
 
         self._delete_fake_file()
-        expected_result = self.fake_initial_content_3
+        hosts_entry = f'{fake_ip}\t{fake_name}.dnr\n'
+        expected_result = self.fake_initial_content_3 + hosts_entry
+        for c in contents:
+            assert c == expected_result
+
+    def test_insert_on_hosts_duplicated(self):
+        contents = []
+        fake_ip = '123.123.123.123'
+        fake_name = 'fake_name'
+        fake_domain = '.dnr'
+        fake_pattern = build_hosts_pattern(fake_name, re.escape(fake_domain))
+        self._create_fake_file(self.fake_initial_content_4)
+        insert_on_hosts(fake_ip, fake_name, fake_domain, fake_pattern, self.paths)
+        for p in self.paths:
+            with open(p) as file:
+                contents.append(file.read())
+
+        self._delete_fake_file()
+        expected_result = self.fake_initial_content_4
         for c in contents:
             assert c == expected_result
 
@@ -150,8 +183,9 @@ ff02::2 ip6-allrouters
         fake_ip = '123.123.123.123'
         fake_name = 'fake_name'
         fake_domain = '.dnr'
+        fake_pattern = build_hosts_pattern(fake_name, re.escape(fake_domain))
         self._create_fake_file(self.fake_initial_content_1)
-        insert_on_hosts(fake_ip, fake_name, fake_domain, self.paths)
+        insert_on_hosts(fake_ip, fake_name, fake_domain, fake_pattern, self.paths)
         for p in self.paths:
             sts.append(os.stat(p))
 
@@ -174,7 +208,7 @@ ff00::0 ip6-mcastprefix
 ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 '''
-        self._create_fake_file(self.fake_initial_content_3)
+        self._create_fake_file(self.fake_initial_content_4)
         remove_from_hosts(pattern, self.paths)
         for p in self.paths:
             with open(p) as file:
@@ -199,7 +233,7 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 123.123.123.123 fake_name.dnr
 '''
-        self._create_fake_file(self.fake_initial_content_4)
+        self._create_fake_file(self.fake_initial_content_5)
         remove_from_hosts(pattern, self.paths)
         for p in self.paths:
             with open(p) as file:
@@ -212,7 +246,7 @@ ff02::2 ip6-allrouters
     def test_remove_from_hosts_preserve_permissions(self):
         sts = []
         pattern = build_hosts_pattern('fake_name2', r'\.dnr')
-        self._create_fake_file(self.fake_initial_content_4)
+        self._create_fake_file(self.fake_initial_content_5)
         remove_from_hosts(pattern, self.paths)
         for p in self.paths:
             sts.append(os.stat(p))

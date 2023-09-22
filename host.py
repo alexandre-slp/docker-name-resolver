@@ -25,20 +25,20 @@ def get_hosts_paths(system: str, release: str) -> list:
 
 
 def build_hosts_pattern(name: str, escaped_domain: str):
-    return re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + escaped_domain + r'.*$')
+    return re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + escaped_domain + r'.*')
 
 
 def build_container_aliases(name: str, domain: str) -> list:
     return [f'{name}{domain}']
 
 
-def insert_on_hosts(ip: str, name: str, domain: str, paths: list):
+def insert_on_hosts(ip: str, name: str, domain: str, pattern: re.Pattern, paths: list):
     hosts_entry = f'{ip}\t{name}{domain}\n'
     for path in paths:
         with open(path) as original_hosts:
             content = original_hosts.read()
 
-        if name in content:
+        if re.search(pattern, content):
             continue
 
         if content and content[-1] in string.ascii_letters:
