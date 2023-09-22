@@ -1,3 +1,4 @@
+import os
 import pathlib
 import re
 import shutil
@@ -23,17 +24,28 @@ def get_hosts_paths(system: str, release: str) -> list:
         return ['C:/Windows/System32/drivers/etc/hosts']
 
 
-def build_hosts_pattern(name):
-    return re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + r'\.dnr.*$')
+def build_network_name(domain: str) -> str:
+    if not re.fullmatch(re.compile(r'^\.[a-z.]*[a-z]$'), domain):
+        raise Exception('Malformed domain name. Good domain name example: ".dnr"')
+
+    return f'{domain[1:]}-network'
 
 
-def insert_on_hosts(ip: str, name: str, paths: list):
-    hosts_entry = f'{ip}\t{name}.dnr\n'
+def build_hosts_pattern(name: str, escaped_domain: str):
+    return re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + escaped_domain + r'.*')
+
+
+def build_container_aliases(name: str, domain: str) -> list:
+    return [f'{name}{domain}']
+
+
+def insert_on_hosts(ip: str, name: str, domain: str, pattern: re.Pattern, paths: list):
+    hosts_entry = f'{ip}\t{name}{domain}\n'
     for path in paths:
         with open(path) as original_hosts:
             content = original_hosts.read()
 
-        if name in content:
+        if re.search(pattern, content):
             continue
 
         if content and content[-1] in string.ascii_letters:
@@ -46,6 +58,8 @@ def insert_on_hosts(ip: str, name: str, paths: list):
             new_hosts.write(b)
             new_hosts.seek(0)
             shutil.copy(parent.joinpath(new_hosts.name), path)
+
+        os.chmod(path, int('644', base=8))
 
 
 def remove_from_hosts(pattern: re.Pattern, paths: list):
@@ -64,3 +78,5 @@ def remove_from_hosts(pattern: re.Pattern, paths: list):
             new_hosts.writelines(byte_lines)
             new_hosts.seek(0)
             shutil.copy2(parent.joinpath(new_hosts.name), path)
+
+        os.chmod(path, int('644', base=8))
