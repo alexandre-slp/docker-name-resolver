@@ -1,3 +1,4 @@
+import os
 import pathlib
 import re
 import shutil
@@ -51,6 +52,8 @@ def insert_on_hosts(ip: str, name: str, domain: str, paths: list):
             new_hosts.seek(0)
             shutil.copy(parent.joinpath(new_hosts.name), path)
 
+        os.chmod(path, int('644', base=8))
+
 
 def remove_from_hosts(pattern: re.Pattern, paths: list):
     for path in paths:
@@ -68,3 +71,5 @@ def remove_from_hosts(pattern: re.Pattern, paths: list):
             new_hosts.writelines(byte_lines)
             new_hosts.seek(0)
             shutil.copy2(parent.joinpath(new_hosts.name), path)
+
+        os.chmod(path, int('644', base=8))
