@@ -98,6 +98,14 @@ ff02::2 ip6-allrouters
         assert result == expected_result
 
     @staticmethod
+    def test_build_network_name_fail():
+        expected_result = Exception('Malformed domain name. Good domain name example: ".dnr"')
+        try:
+            build_network_name('dnr')
+        except Exception as exc:
+            assert exc.args == expected_result.args
+
+    @staticmethod
     def test_build_hosts_pattern():
         expected_result = re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*fake_name\.dnr.*')
         pattern = build_hosts_pattern('fake_name', r'\.dnr')
