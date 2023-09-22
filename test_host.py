@@ -1,5 +1,6 @@
 import os
 import re
+import stat
 
 from host import build_hosts_pattern, build_container_aliases, get_hosts_paths, insert_on_hosts, remove_from_hosts
 
@@ -144,6 +145,21 @@ ff02::2 ip6-allrouters
         for c in contents:
             assert c == expected_result
 
+    def test_insert_on_hosts_preserve_permissions(self):
+        sts = []
+        fake_ip = '123.123.123.123'
+        fake_name = 'fake_name'
+        fake_domain = '.dnr'
+        self._create_fake_file(self.fake_initial_content_1)
+        insert_on_hosts(fake_ip, fake_name, fake_domain, self.paths)
+        for p in self.paths:
+            sts.append(os.stat(p))
+
+        self._delete_fake_file()
+        expected_result = int('644', base=8)
+        for s in sts:
+            assert stat.S_IMODE(s.st_mode) == expected_result
+
     def test_remove_from_hosts_3(self):
         contents = []
         pattern = build_hosts_pattern('fake_name', r'\.dnr')
@@ -192,3 +208,16 @@ ff02::2 ip6-allrouters
         self._delete_fake_file()
         for c in contents:
             assert c == expected_result
+
+    def test_remove_from_hosts_preserve_permissions(self):
+        sts = []
+        pattern = build_hosts_pattern('fake_name2', r'\.dnr')
+        self._create_fake_file(self.fake_initial_content_4)
+        remove_from_hosts(pattern, self.paths)
+        for p in self.paths:
+            sts.append(os.stat(p))
+
+        self._delete_fake_file()
+        expected_result = int('644', base=8)
+        for s in sts:
+            assert stat.S_IMODE(s.st_mode) == expected_result
