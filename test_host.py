@@ -2,7 +2,8 @@ import os
 import re
 import stat
 
-from host import build_hosts_pattern, build_container_aliases, get_hosts_paths, insert_on_hosts, remove_from_hosts
+from host import (build_hosts_pattern, build_network_name, build_container_aliases, get_hosts_paths, insert_on_hosts,
+                  remove_from_hosts)
 
 
 class TestHost:
@@ -89,6 +90,12 @@ ff02::2 ip6-allrouters
         paths = get_hosts_paths('linux', 'microsoft')
         expected_paths = ['/etc/hosts', 'C:/Windows/System32/drivers/etc/hosts']
         assert paths == expected_paths
+
+    @staticmethod
+    def test_build_network_name():
+        expected_result = 'dnr-network'
+        result = build_network_name('.dnr')
+        assert result == expected_result
 
     @staticmethod
     def test_build_hosts_pattern():

@@ -24,6 +24,13 @@ def get_hosts_paths(system: str, release: str) -> list:
         return ['C:/Windows/System32/drivers/etc/hosts']
 
 
+def build_network_name(domain: str) -> str:
+    if not re.fullmatch(re.compile(r'^\.[a-z.]*[a-z]$'), domain):
+        raise Exception('Malformed domain name. Good domain name example: ".dnr"')
+
+    return f'{domain[1:]}-network'
+
+
 def build_hosts_pattern(name: str, escaped_domain: str):
     return re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}[ \t]*' + name + escaped_domain + r'.*')
 
