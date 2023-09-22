@@ -57,7 +57,7 @@ def insert_on_hosts(ip: str, name: str, domain: str, pattern: re.Pattern, paths:
             b = bytes(temp, 'utf-8')
             new_hosts.write(b)
             new_hosts.seek(0)
-            shutil.copy(parent.joinpath(new_hosts.name), path)
+            shutil.copyfile(parent.joinpath(new_hosts.name), path)
 
         os.chmod(path, int('644', base=8))
 
@@ -77,6 +77,6 @@ def remove_from_hosts(pattern: re.Pattern, paths: list):
             byte_lines = [bytes(ln, 'utf-8') for ln in new_lines]
             new_hosts.writelines(byte_lines)
             new_hosts.seek(0)
-            shutil.copy2(parent.joinpath(new_hosts.name), path)
+            shutil.copyfile(parent.joinpath(new_hosts.name), path)
 
         os.chmod(path, int('644', base=8))
