@@ -51,11 +51,11 @@ When container stops the line is removed from `hosts`.
 ## Not Tested
 - Windows  
   ```
-  docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume C:/Windows/System32/drivers/etc/hosts:C:/Windows/System32/drivers/etc/hosts --name dnr alexandreslp/docker-name-resolver [options]
+  docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume C:/Windows/System32/drivers/etc/hosts:/etc/hosts --name dnr alexandreslp/docker-name-resolver [options]
   ```
 - WSL  
   ```
-  docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume /etc/hosts:/etc/hosts --volume C:/Windows/System32/drivers/etc/hosts:C:/Windows/System32/drivers/etc/hosts --name dnr alexandreslp/docker-name-resolver [options]
+  docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume /etc/hosts:/etc/hosts --volume C:/Windows/System32/drivers/etc/hosts:/etc/hosts --name dnr alexandreslp/docker-name-resolver [options]
   ```
 
 ## Options
