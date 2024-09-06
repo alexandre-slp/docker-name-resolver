@@ -48,7 +48,11 @@ When container stops the line is removed from `hosts`.
   docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume /etc/hosts:/etc/hosts --name dnr alexandreslp/docker-name-resolver [options]
   ```
 
-## Not Tested
+## Not Working on =(
+- Mac  
+  ```
+  docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume /etc/hosts:/etc/hosts --name dnr alexandreslp/docker-name-resolver [options]
+  ```
 - Windows  
   ```
   docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume C:/Windows/System32/drivers/etc/hosts:/etc/hosts --name dnr alexandreslp/docker-name-resolver [options]
