@@ -2,8 +2,7 @@ import os
 import re
 import stat
 
-from host import (build_hosts_pattern, build_network_name, build_container_aliases, get_hosts_paths, insert_on_hosts,
-                  remove_from_hosts)
+from host import build_hosts_pattern, build_network_name, build_container_aliases, insert_on_hosts, remove_from_hosts
 
 
 class TestHost:
@@ -66,30 +65,6 @@ ff02::2 ip6-allrouters
     def _delete_fake_file(self):
         for p in self.paths:
             os.remove(p)
-
-    @staticmethod
-    def test_get_hosts_paths_linux():
-        paths = get_hosts_paths('linux', 'fake_release')
-        expected_paths = ['/etc/hosts']
-        assert paths == expected_paths
-
-    @staticmethod
-    def test_get_hosts_paths_macos():
-        paths = get_hosts_paths('darwin', 'fake_release')
-        expected_paths = ['/etc/hosts']
-        assert paths == expected_paths
-
-    @staticmethod
-    def test_get_hosts_paths_windows():
-        paths = get_hosts_paths('windows', 'fake_release')
-        expected_paths = ['C:/Windows/System32/drivers/etc/hosts']
-        assert paths == expected_paths
-
-    @staticmethod
-    def test_get_hosts_paths_wsl():
-        paths = get_hosts_paths('linux', 'microsoft')
-        expected_paths = ['/etc/hosts', 'C:/Windows/System32/drivers/etc/hosts']
-        assert paths == expected_paths
 
     @staticmethod
     def test_build_network_name():

@@ -6,24 +6,6 @@ import string
 import tempfile
 
 
-def get_hosts_paths(system: str, release: str) -> list:
-    on_linux = system == 'linux'
-    on_macos = system == 'darwin'
-    on_windows = system == 'windows'
-    on_wsl = on_linux and 'microsoft' in release
-    if on_wsl:
-        return ['/etc/hosts', 'C:/Windows/System32/drivers/etc/hosts']
-
-    if on_linux:
-        return ['/etc/hosts']
-
-    if on_macos:
-        return ['/etc/hosts']
-
-    if on_windows:
-        return ['C:/Windows/System32/drivers/etc/hosts']
-
-
 def build_network_name(domain: str) -> str:
     if not re.fullmatch(re.compile(r'^\.[a-z.]*[a-z]$'), domain):
         raise Exception('Malformed domain name. Good domain name example: ".dnr"')
