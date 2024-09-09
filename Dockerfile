@@ -16,8 +16,10 @@ LABEL authors="apaes"
 
 RUN apk add docker
 
+WORKDIR ${WORKDIR}
+
 COPY --from=base ${WORKDIR}/dist/dnr ./
 
-WORKDIR ${WORKDIR}
+RUN touch hosts
 
 ENTRYPOINT ["./dnr"]
