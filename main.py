@@ -15,7 +15,7 @@ def main(
         domain_name: str,
 ):
     client = docker.from_env()
-    hosts_path = ['./hosts']
+    hosts_path = './hosts'
     network_bridge = client.api.inspect_network('bridge')
     dnr_network_name = build_network_name(domain_name)
 
