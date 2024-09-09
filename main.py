@@ -1,14 +1,12 @@
 #!/usr/bin/python3
-import platform
 import re
 
 import click
 import docker
 from docker.errors import APIError
 
-from event import (is_start, is_die, get_container_name, get_container_ip)
-from host import (build_hosts_pattern, build_network_name, build_container_aliases, get_hosts_paths, insert_on_hosts,
-                  remove_from_hosts)
+from event import is_start, is_die, get_container_name, get_container_ip
+from host import build_hosts_pattern, build_network_name, build_container_aliases, insert_on_hosts, remove_from_hosts
 
 
 @click.command()
@@ -17,9 +15,7 @@ def main(
         domain_name: str,
 ):
     client = docker.from_env()
-    system = platform.uname().system.lower()
-    release = platform.uname().release.lower()
-    hosts_path = get_hosts_paths(system, release)
+    hosts_path = ['./hosts']
     network_bridge = client.api.inspect_network('bridge')
     dnr_network_name = build_network_name(domain_name)
 
