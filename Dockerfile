@@ -1,7 +1,9 @@
-ENV WORKDIR="/dnr"
-
-FROM python:3.11-alpine as base
+FROM python:3.11-alpine AS build
 LABEL authors="apaes"
+
+RUN apk add binutils
+
+ENV WORKDIR="/dnr"
 
 WORKDIR ${WORKDIR}
 
@@ -11,14 +13,14 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN pyinstaller --onefile --clean --noconfirm --name=dnr main.py
 
-FROM base as release
+FROM build AS release
 LABEL authors="apaes"
 
 RUN apk add docker
 
 WORKDIR ${WORKDIR}
 
-COPY --from=base ${WORKDIR}/dist/dnr ./
+COPY --from=build ${WORKDIR}/dist/dnr ./
 
 RUN touch hosts
 

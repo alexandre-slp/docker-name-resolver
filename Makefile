@@ -4,9 +4,13 @@
 APP_NAME:=dnr
 APP_DIR:=/${APP_NAME}
 DOCKER_SOCKET:=/var/run/docker.sock
+CONTAINER_HOSTS_PATH:=/dnr/hosts
 UNIX_HOSTS_LOCATION:=/etc/hosts
 WINDOWS_HOSTS_LOCATION:=C:/Windows/System32/drivers/etc/hosts
-HAS_IMAGE:=$(shell docker images --quiet ${APP_NAME})
+BUILD_IMAGE:=${APP_NAME}-build
+RELEASE_IMAGE:=${APP_NAME}-release
+HAS_BUILD_IMAGE:=$(shell docker images --quiet ${BUILD_IMAGE})
+HAS_RELEASE_IMAGE:=$(shell docker images --quiet ${RELEASE_IMAGE})
 PWD:=$(shell pwd)
 
 welcome:
@@ -20,51 +24,65 @@ welcome:
 help: welcome
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep ^help -v | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-22s\033[0m %s\n", $$1, $$2}'
 
-build: welcome  ## Build DNR image
-	@if [ -z '${HAS_IMAGE}' ]; \
+build: welcome  ## Build DNR build image
+	@if [ -z '${HAS_BUILD_IMAGE}' ]; \
 		then \
 			docker build \
 				--no-cache \
 				--pull \
 				--force-rm \
-				--tag ${APP_NAME} \
+				--target build \
+				--tag ${BUILD_IMAGE} \
 				. \
 		; \
 	fi
 
-unix: welcome build  ## Run DNR on unix systems
-	@echo 'DNR online'
-	@docker run \
-			--detach \
-			--tty \
-			--rm \
-			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
-			--volume ${UNIX_HOSTS_LOCATION}:${UNIX_HOSTS_LOCATION} \
-			--name ${APP_NAME} \
-			${APP_NAME}
+release: welcome  ## Build DNR release image
+	@if [ -z '${HAS_RELEASE_IMAGE}' ]; \
+		then \
+			docker build \
+				--no-cache \
+				--pull \
+				--force-rm \
+				--target release \
+				--tag ${RELEASE_IMAGE} \
+				. \
+		; \
+	fi
 
-windows: welcome build  ## Run DNR on windows system
+unix: welcome build release  ## Run DNR on unix systems
 	@echo 'DNR online'
 	@docker run \
 			--detach \
 			--tty \
 			--rm \
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
-			--volume ${WINDOWS_HOSTS_LOCATION}:${WINDOWS_HOSTS_LOCATION} \
+			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${APP_NAME}
+			${RELEASE_IMAGE}
 
-wsl: welcome build  ## Run DNR on wsl system
+windows: welcome build release  ## Run DNR on windows system
 	@echo 'DNR online'
 	@docker run \
 			--detach \
 			--tty \
 			--rm \
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
-			--volume ${UNIX_HOSTS_LOCATION}:${UNIX_HOSTS_LOCATION} \
-			--volume ${WINDOWS_HOSTS_LOCATION}:${WINDOWS_HOSTS_LOCATION} \
+			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${APP_NAME}
+			${RELEASE_IMAGE}
+
+wsl: welcome build release  ## Run DNR on wsl system
+	@echo 'DNR online'
+	@docker run \
+			--detach \
+			--tty \
+			--rm \
+			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
+			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
+			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
+			--name ${APP_NAME} \
+			${RELEASE_IMAGE}
 
 test: welcome build ## Run tests
 	@docker run \
@@ -73,13 +91,18 @@ test: welcome build ## Run tests
 			--rm \
 			--volume ${PWD}:${APP_DIR} \
 			--name ${APP_NAME}-test \
-			${APP_NAME} \
+			${BUILD_IMAGE} \
 			pytest
 
 rmi: ## Remove DNR image
-	@if [ '${HAS_IMAGE}' ]; \
+	@if [ '${HAS_BUILD_IMAGE}' ]; \
 		then \
-			docker rmi ${APP_NAME} \
+			docker rmi ${BUILD_IMAGE} \
+		; \
+	fi
+	@if [ '${HAS_RELEASE_IMAGE}' ]; \
+		then \
+			docker rmi ${RELEASE_IMAGE} \
 		; \
 	fi
 
