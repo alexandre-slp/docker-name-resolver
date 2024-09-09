@@ -1,12 +1,23 @@
-FROM python:3.11-alpine
+ENV WORKDIR="/dnr"
+
+FROM python:3.11-alpine as base
+LABEL authors="apaes"
+
+WORKDIR ${WORKDIR}
+
+COPY requirements.txt main.py event.py host.py ./
+
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+RUN pyinstaller --onefile --clean --noconfirm --name=dnr main.py
+
+FROM base as release
 LABEL authors="apaes"
 
 RUN apk add docker
 
-WORKDIR /dnr/
-COPY requirements.txt main.py event.py host.py /dnr/
+COPY --from=base ${WORKDIR}/dist/dnr ./
 
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+WORKDIR ${WORKDIR}
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["./dnr"]
