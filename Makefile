@@ -9,6 +9,7 @@ UNIX_HOSTS_LOCATION:=/etc/hosts
 WINDOWS_HOSTS_LOCATION:=C:/Windows/System32/drivers/etc/hosts
 BUILD_IMAGE:=${APP_NAME}-build
 RELEASE_IMAGE:=${APP_NAME}-release
+DOCKER_HUB_IMAGE_NAME:=alexandreslp/docker-name-resolver
 HAS_BUILD_IMAGE:=$(shell docker images --quiet ${BUILD_IMAGE})
 HAS_RELEASE_IMAGE:=$(shell docker images --quiet ${RELEASE_IMAGE})
 PWD:=$(shell pwd)
@@ -37,7 +38,7 @@ build: welcome  ## Build DNR build image
 		; \
 	fi
 
-release: welcome  ## Build DNR release image
+release: welcome build  ## Build DNR release image
 	@if [ -z '${HAS_RELEASE_IMAGE}' ]; \
 		then \
 			docker build \
@@ -50,7 +51,11 @@ release: welcome  ## Build DNR release image
 		; \
 	fi
 
-unix: welcome build release  ## Run DNR on unix systems
+docker-hub-image-push: welcome release  ## Pushes Docker image to Docker Hub
+	@docker tag ${RELEASE_IMAGE} ${DOCKER_HUB_IMAGE_NAME}
+	@docker push ${DOCKER_HUB_IMAGE_NAME}
+
+unix: welcome release  ## Run DNR on unix systems
 	@echo 'DNR online'
 	@docker run \
 			--detach \
@@ -61,7 +66,7 @@ unix: welcome build release  ## Run DNR on unix systems
 			--name ${APP_NAME} \
 			${RELEASE_IMAGE} -v
 
-windows: welcome build release  ## Run DNR on windows system
+windows: welcome release  ## Run DNR on windows system
 	@echo 'DNR online'
 	@docker run \
 			--detach \
@@ -72,7 +77,7 @@ windows: welcome build release  ## Run DNR on windows system
 			--name ${APP_NAME} \
 			${RELEASE_IMAGE} -v
 
-wsl: welcome build release  ## Run DNR on wsl system
+wsl: welcome release  ## Run DNR on wsl system
 	@echo 'DNR online'
 	@docker run \
 			--detach \
