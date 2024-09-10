@@ -1,32 +1,36 @@
 #!/usr/bin/python3
-import platform
 import re
+import sys
+import traceback
 
 import click
 import docker
+import logging
 from docker.errors import APIError
 
-from event import (is_start, is_die, get_container_name, get_container_ip)
-from host import (build_hosts_pattern, build_network_name, build_container_aliases, get_hosts_paths, insert_on_hosts,
-                  remove_from_hosts)
+from event import is_start, is_die, get_container_name, get_container_ip
+from host import build_hosts_pattern, build_network_name, build_container_aliases, insert_on_hosts, remove_from_hosts
 
 
 @click.command()
 @click.option('-d', '--domain_name', default='.dnr', help='Domain name(default=.dnr)')
+@click.option('-v', '--verbose', 'is_verbose', is_flag=True, default=False, help='Logging verbosity')
 def main(
         domain_name: str,
+        is_verbose: bool,
 ):
+    logging_level = logging.INFO if is_verbose else logging.ERROR
+    logging.basicConfig(stream=sys.stdout, level=logging_level, format='[%(level)s] %(message)s')
+    logging.info('Starting')
     client = docker.from_env()
-    system = platform.uname().system.lower()
-    release = platform.uname().release.lower()
-    hosts_path = get_hosts_paths(system, release)
+    hosts_path = './hosts'
     network_bridge = client.api.inspect_network('bridge')
     dnr_network_name = build_network_name(domain_name)
-
     try:
         client.api.create_network(dnr_network_name, check_duplicate=True)
+        logging.info(f'Network {dnr_network_name} created')
     except APIError:
-        pass  # Network already exists
+        logging.warning(f'Network {dnr_network_name} already exists')
 
     escaped_domain_name = re.escape(domain_name)
     pattern = re.compile(r'^.*' + escaped_domain_name + r'.*$')
@@ -38,8 +42,9 @@ def main(
         aliases = build_container_aliases(container_name, domain_name)
         try:
             client.api.connect_container_to_network(container_name, dnr_network_name, aliases=aliases)
+            logging.info(f'Container {container_name} connected to {dnr_network_name}')
         except APIError:
-            pass  # Container already connected
+            logging.warning(f'Container {container_name} already connected tp {dnr_network_name}')
 
     for event in client.events(decode=True):
         if is_start(event):
@@ -50,8 +55,9 @@ def main(
             insert_on_hosts(container_ip, container_name, domain_name, pattern, hosts_path)
             try:
                 client.api.connect_container_to_network(container_name, dnr_network_name, aliases=aliases)
+                logging.info(f'[START] Container {container_name} already connected to {dnr_network_name}')
             except APIError:
-                pass  # Container already connected
+                logging.warning(f'[START] Container {container_name} already connected')
 
         if is_die(event):
             container_name = get_container_name(event)
@@ -59,9 +65,13 @@ def main(
             remove_from_hosts(pattern, hosts_path)
             try:
                 client.api.disconnect_container_from_network(container_name, dnr_network_name)
+                logging.info(f'[DIE] Container {container_name} already disconnected from {dnr_network_name}')
             except APIError:
-                pass  # Container already disconnected
+                logging.warning(f'[DIE] Container {container_name} already disconnected from {dnr_network_name}')
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as exc:
+        print(f'exception: {exc} trace: {traceback.format_exc()}')

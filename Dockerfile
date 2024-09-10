@@ -1,12 +1,29 @@
-FROM python:3.11-alpine
+FROM python:3.11-alpine AS build
 LABEL authors="apaes"
 
-RUN apk add docker
+RUN apk add binutils
 
-WORKDIR /dnr/
-COPY requirements.txt main.py event.py host.py /dnr/
+ENV WORKDIR="/dnr"
+
+WORKDIR ${WORKDIR}
+
+COPY requirements.txt main.py event.py host.py ./
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN pyinstaller --onefile --clean --noconfirm --name=dnr main.py
 
-ENTRYPOINT ["python", "main.py"]
+FROM build AS release
+LABEL authors="apaes"
+
+ENV PYTHONUNBUFFERED=1
+
+RUN apk add docker
+
+WORKDIR ${WORKDIR}
+
+COPY --from=build ${WORKDIR}/dist/dnr ./
+
+RUN touch hosts
+
+ENTRYPOINT ["./dnr"]
