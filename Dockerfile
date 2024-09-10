@@ -16,6 +16,8 @@ RUN pyinstaller --onefile --clean --noconfirm --name=dnr main.py
 FROM build AS release
 LABEL authors="apaes"
 
+ENV PYTHONUNBUFFERED=1
+
 RUN apk add docker
 
 WORKDIR ${WORKDIR}
