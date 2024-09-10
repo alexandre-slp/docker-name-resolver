@@ -59,7 +59,7 @@ unix: welcome build release  ## Run DNR on unix systems
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
 			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${RELEASE_IMAGE}
+			${RELEASE_IMAGE} -v
 
 windows: welcome build release  ## Run DNR on windows system
 	@echo 'DNR online'
@@ -70,7 +70,7 @@ windows: welcome build release  ## Run DNR on windows system
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
 			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${RELEASE_IMAGE}
+			${RELEASE_IMAGE} -v
 
 wsl: welcome build release  ## Run DNR on wsl system
 	@echo 'DNR online'
@@ -82,7 +82,7 @@ wsl: welcome build release  ## Run DNR on wsl system
 			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${RELEASE_IMAGE}
+			${RELEASE_IMAGE} -v
 
 test: welcome build ## Run tests
 	@docker run \
