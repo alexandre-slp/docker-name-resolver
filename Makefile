@@ -1,19 +1,19 @@
 .DEFAULT_GOAL := help
 .PHONY: help welcome build unix windows wsl test rmi stop
 
-APP_NAME				:= dnr
-APP_DIR					:= /${APP_NAME}
-DOCKER_SOCKET			:= /var/run/docker.sock
-CONTAINER_HOSTS_PATH	:= /dnr/hosts
-UNIX_HOSTS_LOCATION		:= /etc/hosts
-WINDOWS_HOSTS_LOCATION	:= C:/Windows/System32/drivers/etc/hosts
-BUILD_IMAGE				:= ${APP_NAME}-build
-RELEASE_IMAGE			:= ${APP_NAME}-release
-DOCKER_HUB_IMAGE_NAME	:= alexandreslp/docker-name-resolver
-VERSION					:= $(if ${v}, ${v}, latest)
-HAS_BUILD_IMAGE			:= $(shell docker images --quiet ${BUILD_IMAGE})
-HAS_RELEASE_IMAGE		:= $(shell docker images --quiet ${RELEASE_IMAGE})
-PWD						:= $(shell pwd)
+APP_NAME				:=dnr
+APP_DIR					:=/${APP_NAME}
+DOCKER_SOCKET			:=/var/run/docker.sock
+CONTAINER_HOSTS_PATH	:=/dnr/hosts
+UNIX_HOSTS_LOCATION		:=/etc/hosts
+WINDOWS_HOSTS_LOCATION	:=C:/Windows/System32/drivers/etc/hosts
+BUILD_IMAGE				:=${APP_NAME}-build
+RELEASE_IMAGE			:=${APP_NAME}-release
+DOCKER_HUB_IMAGE_NAME	:=alexandreslp/docker-name-resolver
+VERSION					:=$(if ${v}, ${v}, latest)
+HAS_BUILD_IMAGE			:=$(shell docker images --quiet ${BUILD_IMAGE})
+HAS_RELEASE_IMAGE		:=$(shell docker images --quiet ${RELEASE_IMAGE})
+PWD						:=$(shell pwd)
 
 welcome:
 	@printf "\033[33m    ____  _   ______  \n"
