@@ -13,16 +13,17 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN pyinstaller --onefile --clean --noconfirm --name=dnr main.py
 
-FROM build AS release
+FROM alpine AS release
 LABEL authors="apaes"
 
 ENV PYTHONUNBUFFERED=1
+ENV WORKDIR="/dnr"
 
 RUN apk add docker
 
 WORKDIR ${WORKDIR}
 
-COPY --from=build ${WORKDIR}/dist/dnr ./
+COPY --from=build ${WORKDIR}/dist/dnr ${WORKDIR}
 
 RUN touch hosts
 

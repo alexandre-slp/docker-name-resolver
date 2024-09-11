@@ -65,6 +65,7 @@ unix: welcome release  ## Run DNR on unix systems
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
 			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
+			--debug \
 			${RELEASE_IMAGE} -v
 
 windows: welcome release  ## Run DNR on windows system
