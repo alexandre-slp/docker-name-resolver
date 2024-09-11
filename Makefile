@@ -10,7 +10,7 @@ WINDOWS_HOSTS_LOCATION	:=C:/Windows/System32/drivers/etc/hosts
 BUILD_IMAGE				:=${APP_NAME}-build
 RELEASE_IMAGE			:=${APP_NAME}-release
 DOCKER_HUB_IMAGE_NAME	:=alexandreslp/docker-name-resolver
-VERSION					:=$(if ${v}, ${v}, latest)
+VERSION					:=$(if ${v},${v},latest)
 HAS_BUILD_IMAGE			:=$(shell docker images --quiet ${BUILD_IMAGE})
 HAS_RELEASE_IMAGE		:=$(shell docker images --quiet ${RELEASE_IMAGE})
 PWD						:=$(shell pwd)
@@ -54,7 +54,7 @@ release: welcome build  ## Build DNR release image
 
 docker-hub-image-push: welcome release  ## Pushes Docker image to Docker Hub
 	@docker tag ${RELEASE_IMAGE} ${DOCKER_HUB_IMAGE_NAME}
-	@docker push ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
+	docker push ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
 
 unix: welcome release  ## Run DNR on unix systems
 	@echo 'DNR online'
