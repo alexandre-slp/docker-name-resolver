@@ -20,7 +20,7 @@ def main(
         is_verbose: bool,
 ):
     logging_level = logging.INFO if is_verbose else logging.ERROR
-    logging.basicConfig(stream=sys.stdout, level=logging_level, format='[%(level)s] %(message)s')
+    logging.basicConfig(stream=sys.stdout, level=logging_level, format='%(asctime)s [%(levelname)s] %(message)s')
     logging.info('Starting')
     client = docker.from_env()
     hosts_path = './hosts'
