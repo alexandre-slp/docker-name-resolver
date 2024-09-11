@@ -69,4 +69,5 @@ When container stops the line is removed from `hosts`.
   docker run --detach --tty --rm --volume /var/run/docker.sock:/var/run/docker.sock --volume /etc/hosts:/etc/hosts --name dnr alexandreslp/docker-name-resolver --domain_name .xpto
   ```
 ## FAQ
-- `Name or service not known` Solution: Clear DNS cache `sudo apt-get -y install nscd && sudo service nscd restart`
+- Problem: `Name or service not known`
+    - Solution: Clear DNS cache `sudo apt-get -y install nscd && sudo service nscd restart`
