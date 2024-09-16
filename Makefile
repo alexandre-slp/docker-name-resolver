@@ -39,7 +39,7 @@ build: welcome  ## Build DNR build image
 		; \
 	fi
 
-release: welcome build  ## Build DNR release image
+release: welcome  ## Build DNR release image
 	@if [ -z '${HAS_RELEASE_IMAGE}' ]; \
 		then \
 			docker build \
@@ -65,7 +65,7 @@ unix: welcome release  ## Run DNR on unix systems
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
 			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${RELEASE_IMAGE} -v
+			${RELEASE_IMAGE}
 
 windows: welcome release  ## Run DNR on windows system
 	@echo 'DNR online'
@@ -76,7 +76,7 @@ windows: welcome release  ## Run DNR on windows system
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
 			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${RELEASE_IMAGE} -v
+			${RELEASE_IMAGE}
 
 wsl: welcome release  ## Run DNR on wsl system
 	@echo 'DNR online'
@@ -88,7 +88,7 @@ wsl: welcome release  ## Run DNR on wsl system
 			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
 			--name ${APP_NAME} \
-			${RELEASE_IMAGE} -v
+			${RELEASE_IMAGE}
 
 test: welcome build ## Run tests
 	@docker run \
