@@ -7,7 +7,7 @@ ENV WORKDIR="/dnr"
 
 WORKDIR ${WORKDIR}
 
-COPY requirements.txt main.py event.py host.py ./
+COPY requirements.txt main.py event.py host.py ${WORKDIR}
 
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
@@ -16,7 +16,6 @@ RUN pyinstaller --onefile --clean --noconfirm --name=dnr main.py
 FROM alpine AS release
 LABEL authors="apaes"
 
-ENV PYTHONUNBUFFERED=1
 ENV WORKDIR="/dnr"
 
 RUN apk add docker
