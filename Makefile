@@ -53,7 +53,7 @@ release: welcome  ## Build DNR release image
 	fi
 
 docker-hub-image-push: welcome release  ## Pushes Docker image to Docker Hub
-	@docker tag ${RELEASE_IMAGE} ${DOCKER_HUB_IMAGE_NAME}
+	@docker tag ${RELEASE_IMAGE} ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
 	docker push ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
 
 unix: welcome release  ## Run DNR on unix systems
