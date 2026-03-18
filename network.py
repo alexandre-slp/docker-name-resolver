@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+import ipaddress
+from typing import Dict, List, Literal, Optional
 
 import docker
 
@@ -94,6 +95,36 @@ def format_ports_for_display(ports: List[int]) -> str:
     """
     normalized = sorted(set(ports))
     return " | ".join(str(p) for p in normalized)
+
+
+SortBy = Literal["name", "ip"]
+SortOrder = Literal["asc", "desc"]
+
+
+def sort_routes(
+    routes: List[ContainerRoute],
+    *,
+    sort_by: SortBy = "name",
+    order: SortOrder = "asc",
+) -> List[ContainerRoute]:
+    """
+    Sort routes for display.
+
+    Defaults match the status table: name ascending.
+    """
+
+    def key_name(route: ContainerRoute) -> str:
+        return route.name
+
+    def key_ip(route: ContainerRoute) -> int:
+        try:
+            return int(ipaddress.ip_address(route.ip))
+        except Exception:
+            return 0
+
+    key_fn = key_name if sort_by == "name" else key_ip
+    reverse = order == "desc"
+    return sorted(routes, key=key_fn, reverse=reverse)
 
 
 def _container_ports(client: docker.DockerClient, container_id: str) -> List[int]:
