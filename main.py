@@ -13,6 +13,8 @@ from network import (
     build_container_aliases,
     build_network_name,
     get_active_containers,
+    can_attach_to_bridge_network,
+    container_route_name,
 )
 from nginx import start_nginx, update_routes
 
@@ -29,6 +31,72 @@ def _setup_logging(is_verbose: bool) -> None:
 @click.group()
 def cli() -> None:
     """Docker Name Resolver CLI."""
+
+
+def _connect_container_to_dnr_network(
+    client: docker.DockerClient,
+    *,
+    container_name: str,
+    alias_base_name: str,
+    dnr_network_name: str,
+    domain_name: str,
+    log_prefix: str,
+) -> None:
+    aliases = build_container_aliases(alias_base_name, domain_name)
+    try:
+        client.api.connect_container_to_network(
+            container_name, dnr_network_name, aliases=aliases
+        )
+        logging.info(
+            "%s Container %s connected to %s",
+            log_prefix,
+            container_name,
+            dnr_network_name,
+        )
+    except APIError:
+        logging.info(
+            "%s Container %s already connected to %s",
+            log_prefix,
+            container_name,
+            dnr_network_name,
+        )
+
+
+def _bootstrap_connect_running_containers(
+    client: docker.DockerClient, *, dnr_network_name: str, domain_name: str
+) -> None:
+    for container in client.api.containers(filters={"status": "running"}):
+        names = container.get("Names") or []
+        container_name = (names[0] if names else "").lstrip("/")
+        if not container_name:
+            continue
+
+        try:
+            inspect = client.api.inspect_container(container.get("Id"))
+        except Exception:
+            continue
+
+        network_mode = (
+            inspect.get("HostConfig", {}).get("NetworkMode") if inspect else None
+        )
+        if not can_attach_to_bridge_network(network_mode):
+            logging.info(
+                "Skipping container %s due to network_mode=%s",
+                container_name,
+                network_mode,
+            )
+            continue
+
+        _connect_container_to_dnr_network(
+            client,
+            container_name=container_name,
+            alias_base_name=container_route_name(
+                client, container_id=container.get("Id"), fallback_name=container_name
+            ),
+            dnr_network_name=dnr_network_name,
+            domain_name=domain_name,
+            log_prefix="[BOOTSTRAP]",
+        )
 
 
 @cli.command()
@@ -63,27 +131,9 @@ def start(is_verbose: bool) -> None:
     except APIError:
         logging.info("Network %s already exists", dnr_network_name)
 
-    # Connect current bridge containers to the DNR network.
-    network_bridge = client.api.inspect_network("bridge")
-    for container_info in (network_bridge.get("Containers") or {}).values():
-        container_name = container_info.get("Name")
-        if not container_name:
-            continue
-
-        aliases = build_container_aliases(container_name, domain_name)
-        try:
-            client.api.connect_container_to_network(
-                container_name, dnr_network_name, aliases=aliases
-            )
-            logging.info(
-                "Container %s connected to %s", container_name, dnr_network_name
-            )
-        except APIError:
-            logging.info(
-                "Container %s already connected to %s",
-                container_name,
-                dnr_network_name,
-            )
+    _bootstrap_connect_running_containers(
+        client, dnr_network_name=dnr_network_name, domain_name=domain_name
+    )
 
     # Start nginx once and build initial configuration.
     start_nginx()
@@ -93,29 +143,52 @@ def start(is_verbose: bool) -> None:
     # Listen for docker events to keep configuration in sync.
     for event in client.events(decode=True):
         if is_start(event):
+            if event.get("Type") and event.get("Type") != "container":
+                continue
+
             container_name = get_container_name(event)
-            aliases = build_container_aliases(container_name, domain_name)
+            if not container_name:
+                continue
+
             try:
-                client.api.connect_container_to_network(
-                    container_name, dnr_network_name, aliases=aliases
-                )
+                inspect = client.api.inspect_container(container_name)
+            except Exception:
+                inspect = None
+
+            network_mode = (
+                inspect.get("HostConfig", {}).get("NetworkMode") if inspect else None
+            )
+            if not can_attach_to_bridge_network(network_mode):
                 logging.info(
-                    "[START] Container %s connected to %s",
+                    "[START] Skipping container %s due to network_mode=%s",
                     container_name,
-                    dnr_network_name,
+                    network_mode,
                 )
-            except APIError:
-                logging.info(
-                    "[START] Container %s already connected to %s",
-                    container_name,
-                    dnr_network_name,
-                )
+                continue
+
+            _connect_container_to_dnr_network(
+                client,
+                container_name=container_name,
+                alias_base_name=container_route_name(
+                    client,
+                    container_id=event.get("id") or container_name,
+                    fallback_name=container_name,
+                ),
+                dnr_network_name=dnr_network_name,
+                domain_name=domain_name,
+                log_prefix="[START]",
+            )
 
             routes = get_active_containers(client, dnr_network_name, domain_name)
             update_routes(routes)
 
         if is_die(event):
+            if event.get("Type") and event.get("Type") != "container":
+                continue
+
             container_name = get_container_name(event)
+            if not container_name:
+                continue
             try:
                 client.api.disconnect_container_from_network(
                     container_name, dnr_network_name
