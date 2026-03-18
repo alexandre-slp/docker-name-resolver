@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List, Optional
 
 import docker
 
@@ -22,7 +22,37 @@ def build_network_name(domain: str = DEFAULT_DOMAIN) -> str:
 
 
 def build_container_aliases(name: str, domain: str = DEFAULT_DOMAIN) -> list:
-    return [f"{name}{domain}"]
+    normalized_name = name.lstrip("/")
+    return [normalized_name, f"{normalized_name}{domain}"]
+
+
+def container_route_name(
+    client: docker.DockerClient, *, container_id: str, fallback_name: str
+) -> str:
+    """
+    Determine the name used for routing and status.
+
+    If the container was created by Docker Compose, prefer the service name
+    (e.g., "echo2") over the generated container name
+    (e.g., "project-echo2-1").
+    """
+    normalized_fallback = fallback_name.lstrip("/")
+    try:
+        inspect = client.api.inspect_container(container_id)
+    except Exception:
+        return normalized_fallback
+
+    labels: Dict[str, str] = inspect.get("Config", {}).get("Labels") or {}
+    compose_service = labels.get("com.docker.compose.service")
+    return (compose_service or normalized_fallback).lstrip("/")
+
+
+def can_attach_to_bridge_network(network_mode: Optional[str]) -> bool:
+    """
+    Return True if the container can be attached to an additional
+    user-defined bridge network.
+    """
+    return network_mode not in ("host", "none")
 
 
 @dataclass
@@ -86,10 +116,13 @@ def get_active_containers(
             continue
 
         ip = ip_with_mask.split("/")[0]
-        name = container_info.get("Name") or ""
-        if not name:
+        fallback_name = container_info.get("Name") or ""
+        if not fallback_name:
             continue
 
+        name = container_route_name(
+            client, container_id=container_id, fallback_name=fallback_name
+        )
         host = f"{name}{domain}"
         port = _container_port(client, container_id)
         routes.append(ContainerRoute(name=name, ip=ip, host=host, port=port))
