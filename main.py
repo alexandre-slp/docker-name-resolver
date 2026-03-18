@@ -153,10 +153,10 @@ def list() -> None:
         print("No active routes")
         return
 
-    print("CONTAINER\tHOST\tPORT\tIP")
+    print("CONTAINER\tHOST\tIP\tPORT")
     for route in routes:
         port_str = "" if route.port in (80, 443) else str(route.port)
-        print(f"{route.name}\t{route.host}\t{port_str}\t{route.ip}")
+        print(f"{route.name}\t{route.host}\t{route.ip}\t{port_str}")
 
 
 if __name__ == "__main__":
