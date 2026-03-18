@@ -85,7 +85,7 @@ docker-hub-image-push: welcome buildx-ensure  ## Pushes Docker image to Docker H
 		--no-cache \
 		--pull \
 		--force-rm \
-		--sbom=generator=image \
+		--attest type=sbom,generator=docker/scout-sbom-indexer:latest \
 		--provenance=mode=max \
 		--target release \
 		--tag ${DOCKER_HUB_IMAGE_NAME}:${VERSION} \
