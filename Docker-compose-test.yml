@@ -1,0 +1,24 @@
+services:
+  echo2:
+    image: hashicorp/http-echo:latest
+    command: ["-text=hello-from-compose"]
+    expose:
+      - "5678"
+    networks:
+      - echo2_net
+
+  echo3:
+    image: hashicorp/http-echo:latest
+    container_name: echo3
+    command: ["-text=hello-from-compose-echo3"]
+    expose:
+      - "5678"
+    networks:
+      - echo3_net
+
+networks:
+  echo2_net:
+    driver: bridge
+  echo3_net:
+    driver: bridge
+
