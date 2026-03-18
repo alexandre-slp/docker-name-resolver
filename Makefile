@@ -88,9 +88,10 @@ test: welcome build ## Run tests
 			--tty \
 			--rm \
 			--volume ${PWD}:${APP_DIR} \
+			--workdir ${APP_DIR} \
+			--entrypoint pytest \
 			--name ${APP_NAME}-test \
-			${BUILD_IMAGE} \
-			pytest
+			${BUILD_IMAGE}
 
 .PHONY: rmi
 rmi: ## Remove DNR images
