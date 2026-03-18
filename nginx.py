@@ -15,7 +15,7 @@ def render_nginx_config(routes: Iterable[ContainerRoute]) -> str:
         if route.host == "dnr.localhost":
             server_block = """
 server {
-    listen 80;
+    listen 8080;
     server_name dnr.localhost;
 
     root /usr/share/nginx/html;
@@ -31,7 +31,7 @@ server {
             )
             server_block = f"""
 server {{
-    listen 80;
+    listen 8080;
     server_name {route.host};
 
     location / {{

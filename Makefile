@@ -4,6 +4,7 @@ APP_NAME				:=dnr
 APP_DIR					:=/${APP_NAME}
 DOCKER_SOCKET			:=/var/run/docker.sock
 BUILD_IMAGE				:=${APP_NAME}-build
+BUILDX_BUILDER_NAME 	:= dnr-builder
 RELEASE_IMAGE			:=${APP_NAME}-release
 DOCKER_HUB_IMAGE_NAME	:=alexandreslp/docker-name-resolver
 VERSION					:=$(if ${v},${v},latest)
@@ -25,47 +26,71 @@ help: welcome
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep ^help -v | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-22s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: build
-build: welcome  ## Build DNR build image
+
+.PHONY: buildx-ensure
+buildx-ensure:
+	@docker buildx inspect ${BUILDX_BUILDER_NAME} >/dev/null 2>&1 || docker buildx create --name ${BUILDX_BUILDER_NAME} --driver docker-container --use
+
+.PHONY: build
+build: welcome buildx-ensure ## Build DNR build image
 	@if [ -z '${HAS_BUILD_IMAGE}' ]; \
 		then \
-			docker build \
+			docker buildx build \
+				--builder ${BUILDX_BUILDER_NAME} \
+				--load \
 				--no-cache \
 				--pull \
 				--force-rm \
 				--target dev \
 				--tag ${BUILD_IMAGE} \
 				. \
+			&& docker buildx rm ${BUILDX_BUILDER_NAME} >/dev/null 2>&1 || true \
 		; \
 	fi
 
 .PHONY: build-force
-build-force: welcome  ## Build DNR build image
-	@docker build \
+build-force: welcome buildx-ensure ## Build DNR build image
+	@docker buildx build \
+		--builder ${BUILDX_BUILDER_NAME} \
+		--load \
 		--no-cache \
 		--pull \
 		--force-rm \
 		--target dev \
 		--tag ${BUILD_IMAGE} \
-		.
+		. && docker buildx rm ${BUILDX_BUILDER_NAME} >/dev/null 2>&1 || true
 
 .PHONY: release
 release: welcome  ## Build DNR release image
 	@if [ -z '${HAS_RELEASE_IMAGE}' ]; \
 		then \
-			docker build \
+			docker buildx build \
+				--builder ${BUILDX_BUILDER_NAME} \
+				--load \
 				--no-cache \
 				--pull \
 				--force-rm \
 				--target release \
 				--tag ${RELEASE_IMAGE} \
 				. \
+			&& docker buildx rm ${BUILDX_BUILDER_NAME} >/dev/null 2>&1 || true \
 		; \
 	fi
 
 .PHONY: docker-hub-image-push
-docker-hub-image-push: welcome release  ## Pushes Docker image to Docker Hub
-	@docker tag ${RELEASE_IMAGE} ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
-	docker push ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
+docker-hub-image-push: welcome buildx-ensure  ## Pushes Docker image to Docker Hub (with SBOM+provenance)
+	@docker buildx build \
+		--builder ${BUILDX_BUILDER_NAME} \
+		--platform=linux/amd64 \
+		--no-cache \
+		--pull \
+		--force-rm \
+		--attest type=sbom,generator=docker/scout-sbom-indexer:latest \
+		--provenance=mode=max \
+		--target release \
+		--tag ${DOCKER_HUB_IMAGE_NAME}:${VERSION} \
+		--push \
+		. && docker buildx rm ${BUILDX_BUILDER_NAME} >/dev/null 2>&1 || true
 
 .PHONY: start
 start: welcome build  ## Run DNR container (PWD mounted; code/template changes apply without rebuild)
@@ -75,9 +100,9 @@ start: welcome build  ## Run DNR container (PWD mounted; code/template changes a
 			--tty \
 			--rm \
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
+			--group-add $$(stat -c '%g' ${DOCKER_SOCKET}) \
 			--volume ${PWD}:${APP_DIR} \
-			--publish 80:80 \
-			--publish 443:443 \
+			--publish 80:8080 \
 			--name ${APP_NAME} \
 			${BUILD_IMAGE}
 
