@@ -1,7 +1,7 @@
 services:
   echo2:
     image: hashicorp/http-echo:latest
-    command: ["-text=hello-from-compose"]
+    command: ["-text=hello-from-compose-echo2"]
     expose:
       - "5678"
     networks:
