@@ -81,8 +81,8 @@ graph TD
 
 ## Usage
 
-After starting DNR, any container on the default `bridge` network will be
-available as:
+After starting DNR, any running container will be connected to the DNR network
+and available as:
 
 ```
 http://<container_name>.localhost
@@ -99,6 +99,26 @@ And you can list the routes from the CLI with:
 ```
 docker exec -it dnr ./dnr list
 ```
+
+The `list` command prints only the fields that matter in a terminal:
+
+- `CONTAINER`: the route/container name
+- `IP`: the IP address in the DNR network
+- `PORTS`: one or more exposed ports, joined by ` | ` (example: `80 | 443`)
+
+Sorting defaults to the same as the status table (container name ascending),
+and can be customized:
+
+```
+# Sort by container name (ascending/descending)
+docker exec -it dnr ./dnr list --sort name --order asc
+docker exec -it dnr ./dnr list --sort name --order desc
+
+# Sort by IP (ascending/descending)
+docker exec -it dnr ./dnr list --sort ip --order asc
+docker exec -it dnr ./dnr list --sort ip --order desc
+```
+
 ## FAQ
 - Problem: `Name or service not known`
     - Solution: Clear DNS cache `sudo apt-get -y install nscd && sudo service nscd restart`
