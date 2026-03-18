@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Docker Name Resolver</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        font-family: sans-serif;
+        margin: 2rem;
+        background: #000;
+        color: #fff;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      body.light-mode {
+        background: #fff;
+        color: #000;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th,
+      td {
+        border: 1px solid #555;
+        padding: 0.5rem;
+        text-align: left;
+      }
+
+      th {
+        background: #222;
+      }
+
+      body.light-mode th,
+      body.light-mode td {
+        border-color: #ccc;
+      }
+
+      body.light-mode th {
+        background: #f2f2f2;
+      }
+
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 1rem;
+      }
+
+      .toggle-button {
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        border: 1px solid currentColor;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .toggle-button:focus-visible {
+        outline: 2px solid #4da3ff;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body class="dark-mode">
+    <div class="toolbar">
+      <h1>Active container routes</h1>
+      <button
+        id="theme-toggle"
+        type="button"
+        class="toggle-button"
+        aria-pressed="true"
+      >
+        Dark mode
+      </button>
+    </div>
+    <table id="routes-table">
+      <thead>
+        <tr>
+          <th data-label="Container">Container ↕</th>
+          <th data-label="Host">Host ↕</th>
+          <th data-label="IP">IP ↕</th>
+          <th data-type="number" data-label="Port">Port ↕</th>
+        </tr>
+      </thead>
+      <tbody>
+{{table_rows}}
+      </tbody>
+    </table>
+    <script>
+      (function () {
+        var body = document.body;
+        var button = document.getElementById("theme-toggle");
+        if (!button) return;
+
+        function setLabel() {
+          var isLight = body.classList.contains("light-mode");
+          button.textContent = isLight ? "Light mode" : "Dark mode";
+          button.setAttribute("aria-pressed", String(!isLight));
+        }
+
+        button.addEventListener("click", function () {
+          body.classList.toggle("light-mode");
+          setLabel();
+        });
+
+        setLabel();
+      })();
+
+      (function () {
+        var table = document.getElementById("routes-table");
+        if (!table) return;
+
+        var thead = table.tHead;
+        if (!thead) return;
+
+        var headers = thead.rows[0].cells;
+        var tbody = table.tBodies[0];
+        if (!tbody) return;
+
+        var sortState = {};
+
+        // Preserve original labels for headers so we can append arrows,
+        // and show a neutral arrow (↕) from the beginning.
+        for (var i = 0; i < headers.length; i++) {
+          var label = headers[i].getAttribute("data-label");
+          if (!label) {
+            headers[i].setAttribute(
+              "data-label",
+              headers[i].textContent.trim()
+            );
+          }
+          var base = headers[i].getAttribute("data-label") || "";
+          headers[i].textContent = base + " ↕";
+        }
+
+        function getCellValue(row, index) {
+          var cell = row.cells[index];
+          return cell ? cell.textContent.trim() : "";
+        }
+
+        function compareValues(a, b, isNumeric) {
+          if (isNumeric) {
+            var na = a === "" ? NaN : Number(a);
+            var nb = b === "" ? NaN : Number(b);
+            if (isNaN(na) && isNaN(nb)) return 0;
+            if (isNaN(na)) return 1;
+            if (isNaN(nb)) return -1;
+            return na - nb;
+          }
+          return a.localeCompare(b);
+        }
+
+        function sortByColumn(index) {
+          var isNumeric = headers[index].getAttribute("data-type") === "number";
+          var current = sortState[index] || "asc";
+          var next = current === "asc" ? "desc" : "asc";
+          sortState[index] = next;
+
+          // Update header labels with arrow indicator.
+          for (var i = 0; i < headers.length; i++) {
+            var baseLabel = headers[i].getAttribute("data-label") || "";
+            if (i === index) {
+              var arrow = next === "asc" ? " ▲" : " ▼";
+              headers[i].textContent = baseLabel + arrow;
+            } else {
+              headers[i].textContent = baseLabel + " ↕";
+            }
+          }
+
+          var rows = Array.prototype.slice.call(tbody.rows);
+
+          rows.sort(function (rowA, rowB) {
+            var a = getCellValue(rowA, index);
+            var b = getCellValue(rowB, index);
+            var cmp = compareValues(a, b, isNumeric);
+            return next === "asc" ? cmp : -cmp;
+          });
+
+          rows.forEach(function (row) {
+            tbody.appendChild(row);
+          });
+        }
+
+        for (var i = 0; i < headers.length; i++) {
+          (function (index) {
+            headers[index].style.cursor = "pointer";
+            headers[index].addEventListener("click", function () {
+              sortByColumn(index);
+            });
+          })(i);
+        }
+
+        // Initialize sorted state: Container column (index 0), descending.
+        sortState[0] = "asc";
+        sortByColumn(0);
+      })();
+    </script>
+  </body>
+</html>
+
