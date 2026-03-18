@@ -60,33 +60,25 @@ class ContainerRoute:
     name: str
     ip: str
     host: str
-    port: int
+    ports: List[int]
 
 
-def _container_port(client: docker.DockerClient, container_id: str) -> int:
-    """
-    Prefer exposed port 80, then 443, then first exposed; default 80.
-    """
-    try:
-        inspect = client.api.inspect_container(container_id)
-        exposed = inspect.get("Config", {}).get("ExposedPorts") or {}
-    except Exception:
-        return 80
-
+def _parse_exposed_ports(exposed: Dict) -> List[int]:
     ports: List[int] = []
     for key in exposed:
-        if "/" in key:
-            port_str = key.split("/")[0]
-            try:
-                ports.append(int(port_str))
-            except ValueError:
-                continue
-        else:
-            try:
-                ports.append(int(key))
-            except ValueError:
-                continue
+        port_token = key.split("/")[0] if "/" in key else key
+        try:
+            ports.append(int(port_token))
+        except ValueError:
+            continue
 
+    return sorted(set(ports))
+
+
+def primary_port(ports: List[int]) -> int:
+    """
+    Prefer 80, then 443, then the first port; default to 80.
+    """
     if not ports:
         return 80
     if 80 in ports:
@@ -94,6 +86,28 @@ def _container_port(client: docker.DockerClient, container_id: str) -> int:
     if 443 in ports:
         return 443
     return ports[0]
+
+
+def format_ports_for_display(ports: List[int]) -> str:
+    """
+    Display ports as a single string separated by ' | '.
+    """
+    normalized = sorted(set(ports))
+    return " | ".join(str(p) for p in normalized)
+
+
+def _container_ports(client: docker.DockerClient, container_id: str) -> List[int]:
+    """
+    Collect exposed ports; default to [80] when unknown/none.
+    """
+    try:
+        inspect = client.api.inspect_container(container_id)
+        exposed = inspect.get("Config", {}).get("ExposedPorts") or {}
+    except Exception:
+        return [80]
+
+    ports = _parse_exposed_ports(exposed)
+    return ports or [80]
 
 
 def get_active_containers(
@@ -124,8 +138,8 @@ def get_active_containers(
             client, container_id=container_id, fallback_name=fallback_name
         )
         host = f"{name}{domain}"
-        port = _container_port(client, container_id)
-        routes.append(ContainerRoute(name=name, ip=ip, host=host, port=port))
+        ports = _container_ports(client, container_id)
+        routes.append(ContainerRoute(name=name, ip=ip, host=host, ports=ports))
 
     return routes
 
