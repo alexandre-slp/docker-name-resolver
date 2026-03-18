@@ -15,6 +15,7 @@ from network import (
     get_active_containers,
     can_attach_to_bridge_network,
     container_route_name,
+    format_ports_for_display,
 )
 from nginx import start_nginx, update_routes
 
@@ -228,7 +229,7 @@ def list() -> None:
 
     print("CONTAINER\tHOST\tIP\tPORT")
     for route in routes:
-        port_str = "" if route.port in (80, 443) else str(route.port)
+        port_str = format_ports_for_display(route.ports)
         print(f"{route.name}\t{route.host}\t{route.ip}\t{port_str}")
 
 
