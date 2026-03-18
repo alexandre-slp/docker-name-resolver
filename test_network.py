@@ -80,8 +80,8 @@ class TestNetwork:
         routes = get_active_containers(client, "localhost-network", DEFAULT_DOMAIN)
 
         assert routes == [
-            ContainerRoute(name="svc1", ip="10.0.0.2", host="svc1.localhost", port=80),
-            ContainerRoute(name="svc2", ip="10.0.0.3", host="svc2.localhost", port=80),
+            ContainerRoute(name="svc1", ip="10.0.0.2", host="svc1.localhost", ports=[80]),
+            ContainerRoute(name="svc2", ip="10.0.0.3", host="svc2.localhost", ports=[80]),
         ]
 
     @staticmethod
@@ -99,6 +99,6 @@ class TestNetwork:
         routes = get_active_containers(client, "localhost-network", DEFAULT_DOMAIN)
 
         assert routes == [
-            ContainerRoute(name="echo2", ip="10.0.0.10", host="echo2.localhost", port=80),
+            ContainerRoute(name="echo2", ip="10.0.0.10", host="echo2.localhost", ports=[80]),
         ]
 
