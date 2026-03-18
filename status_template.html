@@ -198,8 +198,9 @@
           })(i);
         }
 
-        // Initialize sorted state: Container column (index 0), descending.
-        sortState[0] = "asc";
+        // Initialize sorted state: Container column (index 0), ascending.
+        // sortByColumn() toggles state before sorting, so seed it as "desc".
+        sortState[0] = "desc";
         sortByColumn(0);
       })();
     </script>
