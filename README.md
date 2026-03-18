@@ -21,7 +21,8 @@ without changing the host's `hosts` file or requiring a custom DNS server.
   ```
   docker run --restart unless-stopped --detach --tty \
     --volume /var/run/docker.sock:/var/run/docker.sock \
-    --publish 80:80 --publish 443:443 \
+    --group-add (stat -c '%g' /var/run/docker.sock) \
+    --publish 80:8080 \
     --name dnr alexandreslp/docker-name-resolver
   ```
 
@@ -30,14 +31,15 @@ without changing the host's `hosts` file or requiring a custom DNS server.
   ```
   docker run --restart unless-stopped --detach --tty \
     --volume /var/run/docker.sock:/var/run/docker.sock \
-    --publish 80:80 --publish 443:443 \
+    --group-add (stat -c '%g' /var/run/docker.sock) \
+    --publish 80:8080 \
     --name dnr alexandreslp/docker-name-resolver
   ```
 - Windows (Docker Desktop)  
   ```
   docker run --restart unless-stopped --detach --tty \
     --volume //./pipe/docker_engine:/var/run/docker.sock \
-    --publish 80:80 --publish 443:443 \
+    --publish 80:8080 \
     --name dnr alexandreslp/docker-name-resolver
   ```
 
@@ -56,7 +58,7 @@ graph TD
     
     subgraph Container_DNR [DNR Container]
         NginxProxy[Nginx Reverse Proxy]
-        StatusPage[index.html status page <br> at http://localhost/]
+        StatusPage[index.html status page <br> at http://dnr.localhost/]
         NginxProxy -.-> StatusPage
 
         subgraph Python_Process [Python Process (PID 1)]
@@ -91,7 +93,7 @@ http://<container_name>.localhost
 You can also see a simple HTML status page with all active routes at:
 
 ```
-http://localhost
+http://dnr.localhost/
 ```
 
 And you can list the routes from the CLI with:
