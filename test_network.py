@@ -5,6 +5,7 @@ from network import (
     build_network_name,
     get_active_containers,
     can_attach_to_bridge_network,
+    sort_routes,
 )
 
 
@@ -101,4 +102,22 @@ class TestNetwork:
         assert routes == [
             ContainerRoute(name="echo2", ip="10.0.0.10", host="echo2.localhost", ports=[80]),
         ]
+
+    @staticmethod
+    def test_sort_routes_by_name_desc_default():
+        routes = [
+            ContainerRoute(name="b", ip="10.0.0.3", host="b.localhost", ports=[80]),
+            ContainerRoute(name="a", ip="10.0.0.2", host="a.localhost", ports=[80]),
+        ]
+        sorted_routes = sort_routes(routes)
+        assert [r.name for r in sorted_routes] == ["a", "b"]
+
+    @staticmethod
+    def test_sort_routes_by_ip_asc():
+        routes = [
+            ContainerRoute(name="svc2", ip="10.0.0.10", host="svc2.localhost", ports=[80]),
+            ContainerRoute(name="svc1", ip="10.0.0.2", host="svc1.localhost", ports=[80]),
+        ]
+        sorted_routes = sort_routes(routes, sort_by="ip", order="asc")
+        assert [r.ip for r in sorted_routes] == ["10.0.0.2", "10.0.0.10"]
 
