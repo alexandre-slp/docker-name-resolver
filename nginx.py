@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 from typing import Iterable
 
-from network import ContainerRoute
+from network import ContainerRoute, format_ports_for_display, primary_port
 
 NGINX_CONF_DIR = Path("/etc/nginx/conf.d")
 NGINX_STATUS_PAGE = Path("/usr/share/nginx/html/index.html")
@@ -23,9 +23,10 @@ server {
 }
 """
         else:
+            port = primary_port(route.ports)
             upstream = (
-                f"http://{route.ip}:{route.port}"
-                if route.port != 80
+                f"http://{route.ip}:{port}"
+                if port != 80
                 else f"http://{route.ip}"
             )
             server_block = f"""
@@ -46,18 +47,10 @@ server {{
 
     return "\n\n".join(servers) + "\n"
 
-
-def _port_display(port: int) -> str:
-    """Omit 80 (http) and 443 (https); show others."""
-    if port in (80, 443):
-        return ""
-    return str(port)
-
-
 def render_status_page(routes: Iterable[ContainerRoute]) -> str:
     rows = []
     for route in routes:
-        port_cell = _port_display(route.port)
+        port_cell = format_ports_for_display(route.ports)
         rows.append(
             f"<tr>"
             f"<td>{route.name}</td>"

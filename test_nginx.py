@@ -6,7 +6,7 @@ class TestNginx:
     @staticmethod
     def test_render_nginx_config():
         routes = [
-            ContainerRoute(name="svc1", ip="10.0.0.2", host="svc1.localhost", port=80),
+            ContainerRoute(name="svc1", ip="10.0.0.2", host="svc1.localhost", ports=[80]),
         ]
         config = render_nginx_config(routes)
 
@@ -16,7 +16,9 @@ class TestNginx:
     @staticmethod
     def test_render_nginx_config_non_default_port():
         routes = [
-            ContainerRoute(name="echo", ip="10.0.0.4", host="echo.localhost", port=5678),
+            ContainerRoute(
+                name="echo", ip="10.0.0.4", host="echo.localhost", ports=[5678]
+            ),
         ]
         config = render_nginx_config(routes)
 
@@ -26,7 +28,7 @@ class TestNginx:
     def test_render_nginx_config_dnr_localhost_serves_status_page():
         routes = [
             ContainerRoute(
-                name="dnr", ip="10.0.0.10", host="dnr.localhost", port=80
+                name="dnr", ip="10.0.0.10", host="dnr.localhost", ports=[80]
             ),
         ]
         config = render_nginx_config(routes)
@@ -39,8 +41,8 @@ class TestNginx:
     @staticmethod
     def test_render_status_page():
         routes = [
-            ContainerRoute(name="svc1", ip="10.0.0.2", host="svc1.localhost", port=80),
-            ContainerRoute(name="svc2", ip="10.0.0.3", host="svc2.localhost", port=80),
+            ContainerRoute(name="svc1", ip="10.0.0.2", host="svc1.localhost", ports=[80]),
+            ContainerRoute(name="svc2", ip="10.0.0.3", host="svc2.localhost", ports=[80]),
         ]
         html = render_status_page(routes)
 
@@ -50,4 +52,18 @@ class TestNginx:
         assert "svc2" in html
         assert "svc2.localhost" in html
         assert "10.0.0.3" in html
+
+    @staticmethod
+    def test_render_status_page_multiple_ports():
+        routes = [
+            ContainerRoute(
+                name="svc1",
+                ip="10.0.0.2",
+                host="svc1.localhost",
+                ports=[443, 80],
+            ),
+        ]
+        html = render_status_page(routes)
+
+        assert "80 | 443" in html
 
