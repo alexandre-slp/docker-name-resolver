@@ -1,12 +1,8 @@
 .DEFAULT_GOAL := help
-.PHONY: help welcome build unix windows wsl test rmi stop
 
 APP_NAME				:=dnr
 APP_DIR					:=/${APP_NAME}
 DOCKER_SOCKET			:=/var/run/docker.sock
-CONTAINER_HOSTS_PATH	:=/dnr/hosts
-UNIX_HOSTS_LOCATION		:=/etc/hosts
-WINDOWS_HOSTS_LOCATION	:=C:/Windows/System32/drivers/etc/hosts
 BUILD_IMAGE				:=${APP_NAME}-build
 RELEASE_IMAGE			:=${APP_NAME}-release
 DOCKER_HUB_IMAGE_NAME	:=alexandreslp/docker-name-resolver
@@ -15,6 +11,7 @@ HAS_BUILD_IMAGE			:=$(shell docker images --quiet ${BUILD_IMAGE})
 HAS_RELEASE_IMAGE		:=$(shell docker images --quiet ${RELEASE_IMAGE})
 PWD						:=$(shell pwd)
 
+.PHONY: welcome
 welcome:
 	@printf "\033[33m    ____  _   ______  \n"
 	@printf "\033[33m   / __ \/ | / / __ \ \n"
@@ -23,9 +20,11 @@ welcome:
 	@printf "\033[33m/_____/_/ |_/_/ |_|   \n"
 	@printf "\n"
 
+.PHONY: help
 help: welcome
 	@grep -E '^[0-9a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep ^help -v | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-22s\033[0m %s\n", $$1, $$2}'
 
+.PHONY: build
 build: welcome  ## Build DNR build image
 	@if [ -z '${HAS_BUILD_IMAGE}' ]; \
 		then \
@@ -33,12 +32,23 @@ build: welcome  ## Build DNR build image
 				--no-cache \
 				--pull \
 				--force-rm \
-				--target build \
+				--target dev \
 				--tag ${BUILD_IMAGE} \
 				. \
 		; \
 	fi
 
+.PHONY: build-force
+build-force: welcome  ## Build DNR build image
+	@docker build \
+		--no-cache \
+		--pull \
+		--force-rm \
+		--target dev \
+		--tag ${BUILD_IMAGE} \
+		.
+
+.PHONY: release
 release: welcome  ## Build DNR release image
 	@if [ -z '${HAS_RELEASE_IMAGE}' ]; \
 		then \
@@ -52,55 +62,39 @@ release: welcome  ## Build DNR release image
 		; \
 	fi
 
+.PHONY: docker-hub-image-push
 docker-hub-image-push: welcome release  ## Pushes Docker image to Docker Hub
 	@docker tag ${RELEASE_IMAGE} ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
 	docker push ${DOCKER_HUB_IMAGE_NAME}:${VERSION}
 
-unix: welcome release  ## Run DNR on unix systems
+.PHONY: start
+start: welcome build  ## Run DNR container (PWD mounted; code/template changes apply without rebuild)
 	@echo 'DNR online'
 	@docker run \
 			--detach \
 			--tty \
 			--rm \
 			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
-			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
+			--volume ${PWD}:${APP_DIR} \
+			--publish 80:80 \
+			--publish 443:443 \
 			--name ${APP_NAME} \
-			${RELEASE_IMAGE}
+			${BUILD_IMAGE}
 
-windows: welcome release  ## Run DNR on windows system
-	@echo 'DNR online'
-	@docker run \
-			--detach \
-			--tty \
-			--rm \
-			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
-			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
-			--name ${APP_NAME} \
-			${RELEASE_IMAGE}
-
-wsl: welcome release  ## Run DNR on wsl system
-	@echo 'DNR online'
-	@docker run \
-			--detach \
-			--tty \
-			--rm \
-			--volume ${DOCKER_SOCKET}:${DOCKER_SOCKET} \
-			--volume ${UNIX_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
-			--volume ${WINDOWS_HOSTS_LOCATION}:${CONTAINER_HOSTS_PATH} \
-			--name ${APP_NAME} \
-			${RELEASE_IMAGE}
-
+.PHONY: test
 test: welcome build ## Run tests
 	@docker run \
 			--interactive \
 			--tty \
 			--rm \
 			--volume ${PWD}:${APP_DIR} \
+			--workdir ${APP_DIR} \
+			--entrypoint pytest \
 			--name ${APP_NAME}-test \
-			${BUILD_IMAGE} \
-			pytest
+			${BUILD_IMAGE}
 
-rmi: ## Remove DNR image
+.PHONY: rmi
+rmi: ## Remove DNR images
 	@if [ '${HAS_BUILD_IMAGE}' ]; \
 		then \
 			docker rmi ${BUILD_IMAGE} \
@@ -112,5 +106,6 @@ rmi: ## Remove DNR image
 		; \
 	fi
 
+.PHONY: stop
 stop: ## Stop DNR
 	@docker stop ${APP_NAME}
