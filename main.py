@@ -16,6 +16,7 @@ from network import (
     can_attach_to_bridge_network,
     container_route_name,
     format_ports_for_display,
+    sort_routes,
 )
 from nginx import start_nginx, update_routes
 
@@ -211,7 +212,23 @@ def start(is_verbose: bool) -> None:
 
 
 @cli.command()
-def list() -> None:
+@click.option(
+    "--sort",
+    "sort_by",
+    type=click.Choice(["name", "ip"], case_sensitive=False),
+    default="name",
+    show_default=True,
+    help="Sort routes by container name or IP",
+)
+@click.option(
+    "--order",
+    "order",
+    type=click.Choice(["asc", "desc"], case_sensitive=False),
+    default="asc",
+    show_default=True,
+    help="Sort order",
+)
+def list(sort_by: str, order: str) -> None:
     """
     List active container routes.
 
@@ -227,10 +244,12 @@ def list() -> None:
         print("No active routes")
         return
 
-    print("CONTAINER\tHOST\tIP\tPORT")
-    for route in routes:
+    routes_sorted = sort_routes(routes, sort_by=sort_by.lower(), order=order.lower())
+
+    print("CONTAINER\tIP\tPORTS")
+    for route in routes_sorted:
         port_str = format_ports_for_display(route.ports)
-        print(f"{route.name}\t{route.host}\t{route.ip}\t{port_str}")
+        print(f"{route.name}\t{route.ip}\t{port_str}")
 
 
 if __name__ == "__main__":
