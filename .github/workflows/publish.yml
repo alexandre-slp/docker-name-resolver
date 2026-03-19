@@ -42,3 +42,19 @@ jobs:
           sbom: true
           provenance: mode=max
 
+      - name: Record image in Docker Scout production (latest)
+        uses: docker/scout-action@v1
+        with:
+          command: environment
+          image: docker.io/${{ secrets.DOCKER_USERNAME }}/docker-name-resolver:latest
+          environment: production
+          organization: ${{ secrets.DOCKER_USERNAME }}
+
+      - name: Record image in Docker Scout production (release tag)
+        uses: docker/scout-action@v1
+        with:
+          command: environment
+          image: docker.io/${{ secrets.DOCKER_USERNAME }}/docker-name-resolver:${{ steps.meta.outputs.VERSION }}
+          environment: production
+          organization: ${{ secrets.DOCKER_USERNAME }}
+
