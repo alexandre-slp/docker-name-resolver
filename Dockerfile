@@ -14,7 +14,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 RUN pyinstaller --onefile --clean --noconfirm --name=dnr main.py
 
-FROM nginx:1.27-alpine AS release
+FROM nginx:1.29-alpine-slim AS release
 LABEL authors="apaes"
 
 ENV WORKDIR="/dnr"
