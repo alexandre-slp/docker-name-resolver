@@ -6,8 +6,6 @@ DOCKER_SOCKET			:=/var/run/docker.sock
 BUILD_IMAGE				:=${APP_NAME}-build
 BUILDX_BUILDER_NAME 	:= dnr-builder
 RELEASE_IMAGE			:=${APP_NAME}-release
-DOCKER_HUB_IMAGE_NAME	:=alexandreslp/docker-name-resolver
-VERSION					:=$(if ${v},${v},latest)
 HAS_BUILD_IMAGE			:=$(shell docker images --quiet ${BUILD_IMAGE})
 HAS_RELEASE_IMAGE		:=$(shell docker images --quiet ${RELEASE_IMAGE})
 PWD						:=$(shell pwd)
@@ -76,21 +74,6 @@ release: welcome  ## Build DNR release image
 			&& docker buildx rm ${BUILDX_BUILDER_NAME} >/dev/null 2>&1 || true \
 		; \
 	fi
-
-.PHONY: docker-hub-image-push
-docker-hub-image-push: welcome buildx-ensure  ## Pushes Docker image to Docker Hub (with SBOM+provenance)
-	@docker buildx build \
-		--builder ${BUILDX_BUILDER_NAME} \
-		--platform=linux/amd64 \
-		--no-cache \
-		--pull \
-		--force-rm \
-		--attest type=sbom,generator=docker/scout-sbom-indexer:latest \
-		--provenance=mode=max \
-		--target release \
-		--tag ${DOCKER_HUB_IMAGE_NAME}:${VERSION} \
-		--push \
-		. && docker buildx rm ${BUILDX_BUILDER_NAME} >/dev/null 2>&1 || true
 
 .PHONY: start
 start: welcome build  ## Run DNR container (PWD mounted; code/template changes apply without rebuild)
