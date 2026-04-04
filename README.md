@@ -18,13 +18,6 @@ without changing the host's `hosts` file or requiring a custom DNS server.
 
 ## Tested Systems
 - Ubuntu  
-  ```
-  docker run --restart unless-stopped --detach --tty \
-    --volume /var/run/docker.sock:/var/run/docker.sock \
-    --group-add (stat -c '%g' /var/run/docker.sock) \
-    --publish 80:8080 \
-    --name dnr alexandreslp/docker-name-resolver
-  ```
 
 ## Supported Systems
 - Linux, Mac & WSL  
