@@ -46,39 +46,41 @@ without changing the host's `hosts` file or requiring a custom DNS server.
 ## Architecture
 
 ```mermaid
-graph TD
-    UserBrowser([Browser / Curl <br> http://db.localhost]) --> ResolveLocalhost
-    UserCLI([Host Terminal <br> docker exec dnr list]) -.-> DNR_CLI
+flowchart TD
+    UserBrowser([Browser or curl to db.localhost]) --> ResolveLocalhost
+    UserCLI([Host terminal docker exec dnr list]) -.-> DNR_CLI
 
-    subgraph Host_OS [Host OS (Linux, Mac, Windows)]
-        ResolveLocalhost[OS resolves .localhost <br> to 127.0.0.1] --> PortMap[Docker port mapping <br> Port 80]
+    subgraph HostOS
+        ResolveLocalhost[OS resolves dot-localhost to 127.0.0.1] --> PortMap[Docker publishes port 80]
     end
 
     PortMap --> NginxProxy
-    
-    subgraph Container_DNR [DNR Container]
-        NginxProxy[Nginx Reverse Proxy]
-        StatusPage[index.html status page <br> at http://dnr.localhost/]
-        NginxProxy -.-> StatusPage
 
-        subgraph Python_Process [Python Process (PID 1)]
-            DNR_Daemon[Event daemon]
-            TruthSource[get_active_containers()]
-            NginxManager[nginx.py <br> Generates .conf and .html]
-            DNR_CLI[Comando CLI: list]
+    subgraph DNRContainer
+        subgraph NginxProc
+            NginxProxy[Nginx reverse proxy]
+            StatusPage[Status page at dnr.localhost]
+            NginxProxy -.-> StatusPage
         end
 
-        DNR_Daemon -.->|Reads start/die events| TruthSource
-        TruthSource -.->|Network data| NginxManager
-        NginxManager -.->|Generates configs| NginxProxy
-        NginxManager -.->|Generates status page| StatusPage
-        DNR_CLI -.->|Queries| TruthSource
+        subgraph PythonProc
+            DNR_Daemon[Event daemon]
+            TruthSource[get_active_containers]
+            NginxManager[nginx.py generates conf and html]
+            DNR_CLI[CLI list command]
+        end
+
+        DNR_Daemon -.->|start or die events| TruthSource
+        TruthSource -.->|network data| NginxManager
+        NginxManager -.->|writes configs| NginxProxy
+        NginxManager -.->|writes status page| StatusPage
+        DNR_CLI -.->|queries| TruthSource
     end
 
-    DNR_Daemon <==>|socket| DockerSock([/var/run/docker.sock])
+    DNR_Daemon <==>|socket| DockerSock([docker.sock on host])
     TruthSource <==>|inspects networks| DockerSock
-    
-    NginxProxy -->|proxy_pass| TargetIP([Target Container <br> ex: db IP 172.18.0.2])
+
+    NginxProxy -->|proxy_pass| TargetIP([Target container IP])
 ```
 
 ## Usage
