@@ -50,18 +50,18 @@ graph TD
     UserBrowser([Browser / Curl <br> http://db.localhost]) --> ResolveLocalhost
     UserCLI([Host Terminal <br> docker exec dnr list]) -.-> DNR_CLI
 
-    subgraph Host_OS [Host OS (Linux, Mac, Windows)]
+    subgraph Host_OS["Host OS: Linux, Mac, Windows"]
         ResolveLocalhost[OS resolves .localhost <br> to 127.0.0.1] --> PortMap[Docker port mapping <br> Port 80]
     end
 
     PortMap --> NginxProxy
     
-    subgraph Container_DNR [DNR Container]
+    subgraph Container_DNR["DNR container"]
         NginxProxy[Nginx Reverse Proxy]
         StatusPage[index.html status page <br> at http://dnr.localhost/]
         NginxProxy -.-> StatusPage
 
-        subgraph Python_Process [Python Process (PID 1)]
+        subgraph Python_Process["Python process, PID 1"]
             DNR_Daemon[Event daemon]
             TruthSource[get_active_containers()]
             NginxManager[nginx.py <br> Generates .conf and .html]
