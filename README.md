@@ -57,9 +57,11 @@ flowchart TD
     PortMap --> NginxProxy
 
     subgraph DNRContainer
-        NginxProxy[Nginx reverse proxy]
-        StatusPage[Status page at dnr.localhost]
-        NginxProxy -.-> StatusPage
+        subgraph NginxProc
+            NginxProxy[Nginx reverse proxy]
+            StatusPage[Status page at dnr.localhost]
+            NginxProxy -.-> StatusPage
+        end
 
         subgraph PythonProc
             DNR_Daemon[Event daemon]
